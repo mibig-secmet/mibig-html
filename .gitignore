@@ -1,0 +1,23 @@
+*.swp
+.eggs
+*.egg-info
+*.pyc
+cover/
+.coverage
+*~
+__pycache__
+.cache
+.mypy_cache
+.pytest_cache
+*.css
+*.dmnd
+*.hmm.h3f
+*.hmm.h3i
+*.hmm.h3m
+*.hmm.h3p
+**/.ropeproject/*
+.vim/*
+pip-delete-this-directory.txt
+pip-egg-info/*
+
+# generated during make test

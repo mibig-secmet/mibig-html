@@ -1,0 +1,121 @@
+{% import 'legend_entry_macro.html' as le %}
+
+<div class="page" id='{{region.anchor_id}}'>
+ <div class="region-grid">
+  <div class="content">
+    <div class="description-container">
+      <div class="heading">
+        {{cluster.mibig_accession}}: {{cluster.compounds[0].compound}} biosynthetic gene cluster from <i>{{cluster.organism_name}}</i>
+        {{help_tooltip(svg_tooltip, "region_svg")}}
+      </div>
+      <div class="region-download">
+        <a href="./generated/index.html#r1c1">View antiSMASH-generated output</a>
+      </div>
+      <div class="region-download">
+        <a href="{{ '%s.1.region%03d.gbk' % (cluster.mibig_accession, region.get_region_number()) }}">Download Cluster GenBank file</a>
+      </div>
+      <div class="region-download">
+        <div class="link-like download-svg" data-tag="{{region.anchor_id}}-svg" data-filename="{{record.id}}_{{region.anchor_id}}.svg">Download region SVG</div>
+      </div>
+      <div class = 'description-text'>
+        {{region.description_text()}}.
+        {% if not cluster.loci.accession.startswith("MIBIG") %}
+        <br />
+        {% if cluster.loci.start %}
+          {% set startend="?from={}&to={}".format(cluster.loci.start, cluster.loci.end) %}
+        {% else %}
+          {% set startend="" %}
+        {% endif %}
+        This entry is originally from NCBI GenBank <a href="https://www.ncbi.nlm.nih.gov/nuccore/{{cluster.loci.accession}}{{startend}}">{{cluster.loci.accession}}</a>
+        {%- if record.get_alterations() -%}
+            , but <span class="modification-warning">has been modified</span> (see Modifications tab for details)
+        {%- endif %}.
+        {% endif %}
+      </div>
+      <div class="region-svg-container">
+       <div id='{{region.anchor_id}}-svg'>
+       </div>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div class="legend-items">
+        {{le.legend('legend-type-biosynthetic', 'core biosynthetic genes')}}
+        {{le.legend('legend-type-biosynthetic-additional', 'additional biosynthetic genes')}}
+        {{le.legend('legend-type-transport', 'transport-related genes')}}
+        {{le.legend('legend-type-regulatory', 'regulatory genes')}}
+        {{le.legend('legend-type-other', 'other genes')}}
+        <div style="margin-right: 2em;"></div>
+        {% call le.symbol_legend('legend-resistance', 'resistance') %}
+            <svg viewbox="0 0 8 8">
+                <rect x=0 y=2 height=4 width=8 class="svgene-resistance"></rect>
+            </svg>
+        {% endcall %}
+        {% if (options.tta_enabled or not options.minimal) and record.get_gc_content() >= options.tta_threshold %}
+            {% call le.symbol_legend('legend-tta-codon', 'TTA codons') %}
+                <svg viewbox="0 0 6 6">
+                    <polyline class="svgene-tta-codon" points="3,0 0,6 6,6 3,0"></rect>
+                </svg>
+            {% endcall %}
+        {% endif %}
+        {% if region.has_subregion_by_tool("cassis") %}
+            {{le.static_legend('legend-border-cassis', 'cluster extent as predicted by CASSIS')}}
+        {% endif %}
+      </div>
+    </div>
+    <div class="zoom-buttons">
+      <div class="button-like zoom-button zoom-reset"><img src="images/expand-arrows-alt-solid.svg" alt="reset zoom">reset view</div>
+      <div class="button-like zoom-button zoom-in"><img src="images/search-solid.svg" alt="zoom">zoom to selection</div>
+    </div>
+  </div>
+
+  <div class="focus-panel">
+    <div class="heading">
+      <span>Gene details</span>
+      {{help_tooltip("Shows details of the most recently selected gene, including names, products, location, and other annotations.", "focus-panel")}}
+    </div>
+    <div class="focus-panel-content focus-panel-content-{{region.anchor_id}}">
+        <div style="text-align: center; margin-top: 30%;">
+            Select a gene to view the details available for it
+        </div>
+    </div>
+  </div>
+
+  {% set all_module_sections = sections[record.id][region.get_region_number()] %}
+  <div class="body-details">
+    <div class="body-details-headers">
+    {% for module_sections in all_module_sections %}
+     {% for section in module_sections.detail_sections %}
+      <div class="body-details-header {{region.anchor_id}}-{{section.class_name}}" data-name="{{region.anchor_id}}-{{section.class_name}}">
+        {{section.label}}
+      </div>
+     {% endfor %}
+    {% endfor %}
+    {% if record.get_alterations() %}
+      <div class="body-details-header {{region.anchor_id}}-modifications" data-name="{{region.anchor_id}}-modifications">Modifications</div>
+    {% endif %}
+    </div>
+    {% for module_sections in all_module_sections %}
+     {% for section in module_sections.detail_sections %}
+    <div class="body-details-section {{region.anchor_id}}-{{section.class_name}}">
+      {{section.content}}
+    </div>
+     {% endfor %}
+    {% endfor %}
+     {% if record.get_alterations() %}
+     <div class="body-details-section {{region.anchor_id}}-modifications">
+      <div class="details">
+       <div class="heading"><span>Modifications to original record</span></div>
+       <ul>
+       {%- for alteration in record.get_alterations() %}
+          <li>{{alteration}}</li>
+       {% endfor -%}
+       </ul>
+      </div>
+     </div>
+     {%- endif -%}
+  </div>
+
+ </div>
+
+</div>

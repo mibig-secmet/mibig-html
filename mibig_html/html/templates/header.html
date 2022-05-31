@@ -1,0 +1,29 @@
+  <nav>
+    <div class="main-link">
+     <div>
+        <a href="{{options.base_url}}">
+          <img src="images/mibig_logo.svg" alt="MIBiG logo" width="100">
+        </a>
+       </div>
+       <div style="padding-top: 20px;">
+        <a href="{{options.base_url}}">
+          Repository of Known Biosynthetic Gene Clusters
+        </a>
+      </div>
+    </div>
+    <div class="ancillary-links" style="padding-top: 30px;">
+      <div class="ancillary-link dropdown-menu" id="download-dropdown"><a href="#" id="download-dropdown-link"><img src="images/download.svg" alt="download"> &nbsp; Download</a>
+        <ul class="dropdown-options">
+        {% if not options.skip_zip_file %}
+        <li><a href="{{mibig_id}}.zip">Download all results</a></li>
+        {% endif %}
+        <li><a href="{{annotation_filename}}">Download MIBiG Annotation JSON</a></li>
+        <li><a href="{{mibig_id}}.gbk">Download GenBank summary file</a></li>
+        {% if options.logfile and options.download_logfile() != None %}
+          <li><a href="{{options.download_logfile()}}">Download log file</a></li>
+        {% endif %}
+        </ul>
+      </div>
+      <div class="ancillary-link"><a href="{{options.base_url}}#!/contact"><img src="images/contact.svg" alt="contact"> &nbsp; Contact</a></div>
+    </div>
+  </nav>

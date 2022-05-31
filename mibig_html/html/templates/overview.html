@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{page_title}}</title>
+  <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico">
+  <link rel="stylesheet" type="text/css" href="css/mibig.css">
+</head>
+{% set multi_record = records | length + records_without_regions | length > 1 %}
+<body>
+  <div id="header">
+    {% include 'header.html' %}
+  </div>
+
+{% include 'regions.html' %}
+{% include 'footer.html' %}
+
+  <script src="js/jquery.js"></script>
+  <script src="js/antismash.js"></script>
+  <script src="regions.js"></script>
+  <script>
+    $(document).ready(function() {
+        window.location.href = "#r1c1";
+        window.scrollTo(0, 0);
+        viewer["start"](all_regions, details_data, resultsData, recordData);
+        document.removeEventListener("keyup", null);
+    })
+  </script>
+
+{% include 'svg_references.html' %}
+</body>
+</html>

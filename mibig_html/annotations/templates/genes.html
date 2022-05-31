@@ -1,0 +1,66 @@
+<div class="details">
+    <div class="heading">
+        <span>List of genes involved in compound(s) production</span>
+    </div>
+    <div>
+        <table class="table table-striped">
+            <tr>
+                <thead>
+                    <tr>
+                        <th>Identifiers</th>
+                        <th>Position</th>
+                        <th>Product</th>
+                        <th>Functions</th>
+                        <th>Evidence</th>
+                        <th>Extra</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for gene in genes %}
+                        <tr>
+                            <td>
+                                <ul style="padding:0; margin:0; list-style: none;">
+                                    {% for key in ["locus_tag", "protein_id", "gene"] %}
+                                        {% if gene.get(key, None) not in [None, "None", "n/a"] %}
+                                            <li>{{gene[key]}}</li>
+                                        {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            {% if "start" in gene %}
+                            <td>{{gene["start"]}} - {{gene["end"]}} ({{gene["strand"]}})</td>
+                            {% else %}
+                            <td>(external)</td>
+                            {% endif %}
+                            <td>{{gene["product"]}}</td>
+                            <td>
+                                <ul style="padding:0; margin:0; list-style: none;">
+                                    {% for function in gene["functions"] %}
+                                    <li>{{function}}</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td>
+                              {% if "evidences" in gene %}
+                              {% for evidence in gene["evidences"] %}
+                              {{evidence}}<br>
+                              {% endfor %}
+                              {% endif %}
+                            </td>
+                            <td>
+                                <div class="focus-clipboard">
+                                    {% if "aa_seq" in gene %}
+                                        <span class="clipboard-copy" data-seq="{{gene['aa_seq']}}">copy AA seq</span><br>
+                                    {% endif %}
+                                    {% if "nt_seq" in gene %}
+                                        <span class="clipboard-copy" data-seq="{{gene['nt_seq']}}">copy Nt seq</span><br>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </tr>
+        </table>
+    </div>
+</div>

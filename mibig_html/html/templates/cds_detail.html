@@ -1,0 +1,29 @@
+<div>
+  <br>
+  <strong>Functions:</strong>
+  <br>
+  <div>
+    {% if annotation %}
+      {% for function in annotation.functions %}
+        {{ function.category }}
+        {% if annotation.tailoring %}
+          ({{", ".join(annotation.tailoring)}})
+        {% endif %}
+        (evidence:
+        {% for evidence in function.evidence %}
+          <span class='mibig-gf-evidence-{{evidence[0]}}' title='{{evidence}}'>{{evidence}}</span>
+        {% endfor %}
+        )<br>
+      {% endfor %}
+    {% else %}
+      -
+    {% endif %}
+  </div>
+  <div>
+  {% if annotation and annotation.mutation_phenotype %}
+    <strong>Mutation phenotype:</strong>
+    <br>
+    {{annotation.mutation_phenotype}}
+  {% endif %}
+  </div>
+</div>

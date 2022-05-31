@@ -1,0 +1,127 @@
+<div class="details">
+    <div class="heading">
+    <span>General information about the BGC</span>
+    </div>
+    <div>
+        <table class="table table-striped">
+            <tbody>
+                <tr>
+                    <td width="25%">
+                        <strong>MIBiG accession</strong>
+                    </td>
+                    <td>
+                        {{data.cluster.mibig_accession}}
+                    </td>
+                </tr>
+                <tr>
+                    <td width="25%">
+                        <strong>Short description</strong>
+                    </td>
+                    <td>
+                        {{data.cluster.compounds[0].compound}}
+                        biosynthetic gene cluster from
+                        <i>{{data.cluster.organism_name}}</i>
+                    </td>
+                </tr>
+                <tr>
+                    <td width="25%">
+                        <strong>Status</strong>
+                    </td>
+                    <td>
+                        Minimal annotation: {{"yes" if data.cluster.minimal else "no"}}
+                        {{help_tooltip("A minimal annotation only contains information on the BGC loci and one or more linked chemical product(s)", "mibig", inline=True)}}
+                        <br />
+                        Completeness: {{data.cluster.loci.completeness}}
+                        {{help_tooltip("Whether the loci encodes everything needed for the pathway producing the compound(s)", "mibig", inline=True)}}
+                        </div>
+                    </td>
+                </tr>
+                {% if data.comments %}
+                <tr>
+                    <td width="25%">
+                        <strong>Remarks</strong>
+                    </td>
+                    <td><i>"{{data.comments}}"</i></td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td width="25%">
+                        <strong>Biosynthetic class(es)</strong>
+                    </td>
+                    <td>
+                        <ul style="padding: 0; margin: 0; list-style: none;">
+                            {% for class in data.cluster.biosynthetic_class %}
+                                <li>
+                                  {% if data.cluster[class.lower()] %}
+                                  {{data.cluster[class.lower()]|string}}
+                                  {% else %}
+                                  {{ class }}
+                                  {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td width="25%">
+                        <strong>Loci</strong>
+                    </td>
+                    <td>
+                        {% if data.cluster.loci.accession.startswith("MIBIG:") %}
+                            Direct MIBiG submission: <a href="#">{{data.cluster.mibig_accession}}.gbk</a>
+                        {% else %}
+                            {% if data.cluster.loci.start %}
+                                {% set startend="?from={}&to={}".format(data.cluster.loci.start, data.cluster.loci.end) %}
+                            {% else %}
+                                {% set startend="" %}
+                            {% endif %}
+                            NCBI GenBank: <a href="https://www.ncbi.nlm.nih.gov/nuccore/{{data.cluster.loci.accession}}{{startend}}">{{data.cluster.loci.accession}}</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td width="25%">
+                        <strong>Compounds</strong>
+                    </td>
+                    <td>
+                        <ul style="padding: 0; margin: 0; list-style: none;">
+                            {% for compound in data.cluster.compounds %}
+                            <li>
+                              <span class="compound-link" data-name="{{compound.compound|replace(' ', '-')}}">
+                                {{compound.compound}}
+                              </span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td width="25%">
+                        <strong>Species</strong>
+                    </td>
+                    <td>
+                        <i>{{data.cluster.organism_name}}</i>
+                        [<a href="https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id={{data.cluster.ncbi_tax_id}}">taxonomy</a>]
+                    </td>
+                </tr>
+                <tr class="references">
+                    <td width="25%">
+                        <strong>References</strong>
+                    </td>
+                    <td>
+                        <ul>
+                            {% for url in publications_links %}
+                            <li>
+                              <svg class="icon"><use xlink:href="images/icons.svg#book"></use></svg>
+                                <a href="{{url.ref}}">{{url.title}}</a>
+                                {% if url.info %}
+                                <span class="author-info">{{url.info}}</span>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+            </table>
+    </div>
+</div>

@@ -1,0 +1,152 @@
+<div class="details">
+    <div class="heading">
+       <span>NRP-specific information</span>
+    </div>
+    <div>
+        <table class="table table-striped">
+            <tbody>
+                <tr>
+                    <td width="25%">
+                        <strong>Subclass</strong>
+                    </td>
+                    <td>
+                        {{nrp.subclass or "n/a"}}
+                    </td>
+                </tr>
+                <tr>
+                    <td width="25%">
+                        <strong>Cyclic?</strong>
+                    </td>
+                    <td>
+                        {{"yes" if nrp.cyclic else "no"}}
+                    </td>
+                </tr>
+                {% if nrp.release_type %}
+                <tr>
+                    <td width="25%">
+                        <strong>Release type</strong>
+                    </td>
+                    <td>
+                        <ul style="padding: 0; margin: 0; list-style: none;">
+                            {% for rel in nrp.release_type %}
+                            <li>
+                                {{rel}}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                {% endif %}
+                {% if nrp.lipid_moiety %}
+                <tr>
+                    <td width="25%">
+                        <strong>Lipid moiety</strong>
+                    </td>
+                    <td>
+                        {{nrp.lipid_moiety}}
+                    </td>
+                </tr>
+                {% endif %}
+                {% if nrp.thioesterases %}
+                <tr>
+                    <td width="25%">
+                        <strong>Thioesterase genes</strong>
+                    </td>
+                    <td>
+                        <ul style="padding: 0; margin: 0; list-style: none;">
+                            {% for te in nrp.thioesterases %}
+                            <li>
+                                {{te.gene}} ({{te.thioesterase_type}})
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+    {% if nrp.nrps_genes %}
+    <div class="heading">
+       <span>NRP-synthases</span>
+    </div>
+    <div>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th style="width: 9em; text-align:center;">Gene</th>
+                    <th style="min-width: 20em; text-align:center;">Modules</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for nrps in nrp.nrps_genes %}
+                    {% for module in nrps.modules %}
+                    <tr>
+                        {% if loop.index == 1 %}
+                        <td rowspan="{{nrps.modules|length}}" style="text-align:center; vertical-align: middle;">{{nrps.gene_id}}</td>
+                        {% endif %}
+                        <td style="min-width: 20em; text-align:left;">
+                        {% if module != None %}
+                            <div style="margin-bottom: 1em;">
+                                <strong>
+                                    Module {{module.module_number or "?"}}
+                                    {% if module.active %}
+                                    [active]
+                                    {% endif %}
+                                    {% if module.comments %}
+                                      {{help_tooltip(module.comments, "mibig")}}
+                                    {% endif %}
+                                </strong><br />
+                                {% if module.specificity %}
+                                Specificity: {{module.specificity|string}}<br />
+                                Evidence for specificity: <br />
+                                <ul style="margin: 0;">
+                                    {% for evidence in module.specificity.evidence %}
+                                    <li>
+                                        {{evidence}}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                {% if module.specificity.subcluster %}
+                                Genes encoding specified AA: {{", ".join(module.specificity.subcluster)}}<br />
+                                {% endif %}
+                                {% endif %}
+                                {% if module.condensation_type %}
+                                Condensation domain type: {{module.condensation_type}} <br />
+                                {% endif %}
+                                {% if module.modification_domains %}
+                                Modification domains: {{", ".join(module.modification_domains)}}<br />
+                                {% endif %}
+                                {% if module.non_canonical %}
+                                Non-canonical activity: <br />
+                                <ul style="margin: 0;">
+                                    {% if module.non_canonical.iterated %}
+                                    <li>Iterated</li>
+                                    {% endif %}
+                                    {% if module.non_canonical.non_elongating %}
+                                    <li>Non-elongating</li>
+                                    {% endif %}
+                                    {% if module.non_canonical.skipped %}
+                                    <li>Skipped</li>
+                                    {% endif %}
+                                </ul>
+                                Evidence for non-canonical activity: <br />
+                                <ul style="margin: 0;">
+                                    {% for evidence in module.non_canonical.evidence %}
+                                    <li>
+                                        {{evidence}}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>

@@ -1,0 +1,182 @@
+<div class="details">
+        <div class="heading">
+           <span>Polyketide-specific information</span>
+        </div>
+        <div>
+            <table class="table table-striped">
+                <tbody>
+                    <tr>
+                        <td width="25%">
+                            <strong>Subclass</strong>
+                        </td>
+                        <td>
+                            {{("/".join(pk.subclasses) or "Unknown")}}
+                        </td>
+                    </tr>
+                    {% if pk.starter_unit %}
+                    <tr>
+                        <td width="25%">
+                            <strong>Starter unit</strong>
+                        </td>
+                        <td>
+                        {{pk.starter_unit}}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% if pk.ketide_length %}
+                    <tr>
+                        <td width="25%">
+                            <strong>Ketide length</strong>
+                        </td>
+                        <td>
+                            {{pk.ketide_length}}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <td width="25%">
+                            <strong>Cyclic?</strong>
+                        </td>
+                        <td>
+                            {{"yes" if pk.cyclic else "no"}}
+                        </td>
+                    </tr>
+                    {% if pk.release_type %}
+                    <tr>
+                        <td width="25%">
+                            <strong>Release type</strong>
+                        </td>
+                        <td>
+                            <ul style="padding: 0; margin: 0; list-style: none;">
+                                {% for rel in pk.release_type %}
+                                <li>
+                                    {{rel}}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {% if pk.synthases %}
+        <div class="heading">
+           <span>Polyketide-synthases</span>
+        </div>
+        <div>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th style="width: 9em; text-align:center;">Genes</th>
+                        <th style="min-width: 20em; text-align:center;">Properties</th>
+                        <th style="min-width: 20em; text-align:center;">Modules</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for pks in pk.synthases %}
+                {% for module in (pks.modules or [None]) %}
+                    <tr>
+                        {% if loop.index == 1 %}
+                        <td rowspan="{{(pks.modules or [None])|length}}" style="text-align:center; vertical-align: middle;">
+                            {{"<br />+<br />".join(pks.genes)|safe}}
+                        </td>
+                        <td rowspan="{{(pks.modules or [None])|length}}" style="text-align:left; vertical-align: text-top;">
+                            <strong>Synthase subclass:</strong> {{"/".join(pks.subclass)}}<br />
+                            {% if pks.trans_at %}
+                            <strong>Trans-acyltansferases:</strong> {{", ".join(pks.trans_at.genes)}}<br />
+                            {% endif %}
+                            {% if pks.thioesterases %}
+                            <strong>Thioesterases:</strong><br />
+                            <ul style="padding: 0; padding-left: 1em; margin: 0;">
+                                {% for te in pks.thioesterases %}
+                                <li>
+                                    {{te.gene}} ({{te.thioesterase_type}})
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                            {% if pks.pufa_modification_domains %}
+                            <strong>PUFA modification domains:</strong> {{", ".join(pks.pufa_modification_domains)}}<br />
+                            {% endif %}
+                            {% if pks.iterative %}
+                            {% if pks.iterative.genes %}
+                            <strong>Iterative PKS genes:</strong> {{", ".join(pks.iterative.genes)}}<br />
+                            {% endif %}
+                            <strong>Iterative PKS type:</strong> {{pks.iterative.subtype}}, {{pks.iterative.cyclization_type}}<br />
+                            <strong>Iteration counts:</strong> {{pks.iterative.nr_iterations}}<br />
+                            {% if pks.iterative.evidence %}
+                            <ul style="margin: 0;">
+                                {% for evidence in pks.iterative.evidence %}
+                                <li>
+                                    {{evidence}}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                        <td style="min-width: 20em; text-align:left;">
+                            {% if module != None %}
+                            <div style="margin-bottom: 1em;">
+                                <strong>
+                                    Module {{module.module_number or "?"}}
+                                    {% if module.comments %}
+                                    <div class="help-container" style="float: none;">
+                                        <div class="help-icon" data-id="mibig-help-pk-pks-module-{{loop.index}}" style="float: none; background-color: #006CA2;"></div>
+                                        <span class="help-tooltip" id="mibig-help-pk-pks-module-{{loop.index}}">{{module.comments}}</span>
+                                    </div>
+                                    {% endif %}
+                                </strong><br />
+                                {% if module.at_specificities_pretty %}
+                                Specificity: {{"/".join(module.at_specificities_pretty)}}<br />
+                                {% if module.evidence %}
+                                Evidence for specificity: {{module.evidence}}<br />
+                                {% endif %}
+                                {% endif %}
+                                {% if module.genes %}
+                                Genes: {{", ".join(module.genes)}}<br />
+                                {% endif %}
+                                {% if module.domains %}
+                                Core domains: {{", ".join(module.domains)}}<br />
+                                {% endif %}
+                                {% if module.modification_domains %}
+                                Scaffold-modifying domains: {{", ".join(module.modification_domains)}}<br />
+                                {% endif %}
+                                {% if "Ketoreductase" in module.domains %}
+                                KR-domain stereochemistry: {{module.kr_stereochem or "Unknown"}}<br />
+                                {% endif %}
+                                {% if module.non_canonical %}
+                                Non-canonical activity: <br />
+                                <ul style="margin: 0;">
+                                    {% if module.non_canonical.iterated %}
+                                    <li>Iterated</li>
+                                    {% endif %}
+                                    {% if module.non_canonical.non_elongating %}
+                                    <li>Non-elongating</li>
+                                    {% endif %}
+                                    {% if module.non_canonical.skipped %}
+                                    <li>Skipped</li>
+                                    {% endif %}
+                                </ul>
+                                Evidence for non-canonical activity: <br />
+                                <ul style="margin: 0;">
+                                    {% for evidence in module.non_canonical.evidence %}
+                                    <li>
+                                        {{evidence}}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>

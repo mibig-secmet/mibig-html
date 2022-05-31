@@ -1,0 +1,97 @@
+<div class="details">
+    <div class="heading">
+        <span>RiPP-specific information</span>
+    </div>
+    <div>
+        <table class="table table-striped">
+            <tbody>
+                <tr>
+                    <td width="25%">
+                        <strong>Subclass</strong>
+                    </td>
+                    <td>
+                        {{ripp.subclass}}
+                    </td>
+                </tr>
+                <tr>
+                    <td width="25%">
+                        <strong>Cyclic?</strong>
+                    </td>
+                    <td>
+                        {{"yes" if ripp.cyclic else "no"}}
+                    </td>
+                </tr>
+                {% if ripp.peptidases %}
+                <tr>
+                    <td width="25%">
+                        <strong>Peptidases</strong>
+                    </td>
+                    <td>
+                        <ul style="padding: 0; margin: 0; list-style: none;">
+                            {% for pep in ripp.peptidases %}
+                            <li>
+                                {{pep}}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                {% endif %}
+                {% for precursor in ripp.precursor_genes %}
+                <tr>
+                    {% if loop.index == 1 %}
+                    <td rowspan="{{ripp.precursor_genes|length}}" style="text-align:center; vertical-align: middle;">
+                    Precursor genes
+                    </td>
+                    {% endif %}
+                    <td>
+                        <div style="margin-bottom: 1em;">
+                            <strong>
+                                >{{precursor.gene_id}}
+                            </strong><br />
+                            {% if precursor.leader_sequence %}
+                            Leader sequence: {{precursor.leader_sequence}}<br />
+                            {% endif %}
+                            {% if precursor.recognition_motif %}
+                            Recognition motif: {{precursor.recognition_motif}}<br />
+                            {% endif %}
+                            Core sequences: <br />
+                            <ul style="padding:0; padding-left: 1em; margin:0;">
+                                {% for seq in precursor.core_sequence %}
+                                <li>
+                                    {{seq}}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% if precursor.follower_sequence %}
+                            Follower sequence: {{precursor.follower_sequence}}<br />
+                            {% endif %}
+                            {% if precursor.crosslinks %}
+                            Crosslinks: <br />
+                            <ul style="padding:0; padding-left: 1em; margin:0;">
+                                {% for cl in precursor.crosslinks %}
+                                <li>
+                                    {{cl.first_AA_position}}x{{cl.second_AA_position}}
+                                    ({{cl.type}})
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                            {% if precursor.cleavage_recognition_sites %}
+                            Cleavage recognition sites: <br />
+                            <ul style="padding:0; padding-left: 1em; margin:0;">
+                                {% for site in precursor.cleavage_recognition_sites %}
+                                <li>
+                                    {{site}}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

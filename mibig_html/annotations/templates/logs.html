@@ -1,0 +1,45 @@
+<div class="details">
+    <div class="heading">
+    <span>Annotation changelog</span>
+    </div>
+    <div>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>MIBiG version</th>
+                    <th>Submitter</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>
+                        <strong>{{log.mibig_version}}</strong>
+                    </td>
+                    <td class="contributors">
+                      <ul>
+                        {% for contributor in log.contributors %}
+                        <li class="contributor" id="{{contributor}}">
+                          <svg class="icon"><use xlink:href="images/icons.svg#user-secret"></use></svg>
+                          Hidden contributor (ID: <span class="contributor-id">{{contributor}}</span>, no GDPR consent given).
+                        </li>
+                        {% endfor %}
+                      </ul>
+                    </td>
+                    <td class="changelog-notes">
+                        <ul>
+                            {% for comment in log.comments %}
+                            <li>
+                              <svg class="icon"><use xlink:href="images/icons.svg#comment"></use></svg>
+                              {{comment}}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
