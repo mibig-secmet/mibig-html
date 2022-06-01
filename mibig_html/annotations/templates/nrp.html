@@ -90,8 +90,8 @@
                             <div style="margin-bottom: 1em;">
                                 <strong>
                                     Module {{module.module_number or "?"}}
-                                    {% if module.active %}
-                                    [active]
+                                    {% if not module.active %}
+                                    [inactive]
                                     {% endif %}
                                     {% if module.comments %}
                                       {{help_tooltip(module.comments, "mibig")}}
