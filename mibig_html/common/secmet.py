@@ -58,6 +58,11 @@ class Record(ASRecord):
 
     @staticmethod
     def from_biopython(seq_record: SeqRecord, taxon: str) -> "Record":
+        # handle some entry reference records being mislabeled as RNA (e.g. BGCs 488, 720, 1166)
+        molecule_type = seq_record.annotations.get("molecule_type", "DNA")
+        if not molecule_type.upper().endswith("DNA"):
+            seq_record.annotations["molecule_type"] = "DNA"
+
         can_be_circular = taxon == "bacteria"
         names = set()
         for feature in seq_record.features:
