@@ -8,7 +8,6 @@ from antismash.common.secmet.record import (
     location_bridges_origin,
     Record as ASRecord,
     Seq,
-    SeqFeature,
     SeqRecord,
 )
 
