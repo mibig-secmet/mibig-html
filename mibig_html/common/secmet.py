@@ -69,7 +69,7 @@ class Record(ASRecord):
             if can_be_circular and location_bridges_origin(feature.location, allow_reversing=False):
                 name = ""
                 for qual in ["locus_tag", "gene", "protein_id"]:
-                    name = feature.qualifiers.get(qual, "")
+                    name = feature.qualifiers.get(qual, [""])[0]
                     if name:
                         break
                 if not name:
