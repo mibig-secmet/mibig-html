@@ -19,6 +19,14 @@ class Record(ASRecord):
         self._altered_from_input: List[str] = []
         self._deduplicated_cds_names: Dict[str, List[str]] = {}
 
+    def __getattr__(self, attr: str) -> Any:
+        # passthroughs to the original SeqRecord
+        if attr in ["id", "seq", "description", "name", "annotations", "dbxrefs"]:
+            return getattr(self._record, attr)
+        if attr in self.__slots__:  # changed here, as ASRecord referred by name to itself
+            return self.__getattribute__(attr)
+        raise AttributeError("Record has no attribute '%s'" % attr)
+
     def add_alteration(self, description: str) -> None:
         """ Adds a description of a fundamental change to input values to the record """
         assert description
