@@ -36,7 +36,6 @@ def convert_categories(categories: List[str]) -> List[str]:
     translations = {
         "NRP": "NRPS",
         "Polyketide": "PKS",
-        "Terpene": "terpene",
     }
     known = {category.name for category in hmm_detection.categories.get_rule_categories()}
 
@@ -44,6 +43,9 @@ def convert_categories(categories: List[str]) -> List[str]:
     for category in categories:
         if category in known:
             new.append(category)
+            continue
+        if category.lower() in known:
+            new.append(category.lower())
             continue
         replacement = translations.get(category)
         if not replacement:
