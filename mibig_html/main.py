@@ -1,6 +1,8 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+from datetime import datetime
+import json
 import logging
 import os
 import shutil
@@ -14,8 +16,12 @@ from antismash.common.record_processing import (
     records_contain_shotgun_scaffolds,
     generate_unique_id,
     sanitise_sequence,
-    parallel_function,
-    filter_records_by_name,
+    strip_record,
+    _strict_parse,
+)
+from antismash.common.secmet.locations import (
+    FeatureLocation,
+    locations_overlap,
 )
 from antismash.detection import (
     cluster_hmmer,
@@ -35,6 +41,7 @@ from antismash.main import (
     SeqIO,
     svg,
 )
+from mibig.converters.read.top import Everything
 
 from mibig_html import annotations, html
 from mibig_html.common.secmet import Record
@@ -191,19 +198,18 @@ def mibig_rename_records(records: List[Record], options: ConfigType) -> None:
         record.annotations['accessions'].insert(0, mibig_acc)
 
 
-def pre_process_sequences(sequences: List[Record], options: ConfigType,
-                          _genefinding: AntismashModule) -> List[Record]:
+def pre_process_sequences(sequences: List[Record], options: ConfigType) -> List[Record]:
     """ Custom preprocess to remove restrictions from normal antiSMASH runs
 
         Arguments:
             sequences: the secmet.Record instances to process
             options: an antismash Config instance
-            genefinding: the module to use for genefinding (not used here)
 
         Returns:
             A list of altered secmet.Record
     """
     logging.debug("Preprocessing %d sequences", len(sequences))
+    assert len(sequences) == 1
 
     # catch WGS master or supercontig entries
     if records_contain_shotgun_scaffolds(sequences):
@@ -227,19 +233,13 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType,
                     record.id = generate_unique_id(record.id, all_record_ids)[0]
                 all_record_ids.add(record.id)
             assert len(all_record_ids) == len(sequences), "%d != %d" % (len(all_record_ids), len(sequences))
-        if len(sequences) == 1:
-            sequences = [sanitise_sequence(sequences[0])]
-        else:
-            sequences = parallel_function(sanitise_sequence, ([record] for record in sequences))
+        sequences = [sanitise_sequence(sequences[0])]
 
     for record in sequences:
         if record.skip or not record.seq:
             logging.warning("Record %s has no sequence, skipping.", record.id)
         if not record.id:
             raise AntismashInputError("record has no name")
-
-    # skip anything not matching the filter
-    filter_records_by_name(sequences, options.limit_to_record)
 
     if all(sequence.skip for sequence in sequences):
         raise AntismashInputError("all records skipped")
@@ -248,10 +248,123 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType,
     return sequences
 
 
-antismash.main.write_outputs = write_outputs
-antismash.main.record_processing.pre_process_sequences = pre_process_sequences
-antismash.main.record_processing.Record = Record
-antismash.main.run_detection = run_mibig_detection
+def parse_input_sequence(filename: str, taxon: str = "bacteria",
+                         start: int = 0, end: int = 0) -> List[Record]:
+    """ Parse input records contained in a file
+
+        Arguments:
+            filename: the path of the file to read
+            taxon: the taxon of the input, e.g. 'bacteria', 'fungi'
+            start: a start location for trimming the sequence, or -1 to use all
+            end: an end location for trimming the sequence, or -1 to use all
+
+        Returns:
+            A list of secmet.Record instances, one for each record in the file
+    """
+    logging.info('Parsing input sequence %r', filename)
+
+    records = _strict_parse(filename)
+    assert len(records) == 1
+    record = records[0]
+
+    if not Record.is_nucleotide_sequence(record.seq):
+        raise AntismashInputError("protein records are not supported: %s" % record.id)
+
+    # before conversion to secmet records, remove any irrelevant CDS features if possible
+    if start > 0 or end != 0:
+        if end == -1:
+            end = len(record.seq)
+        location = FeatureLocation(start, end)
+        logging.critical(f"removing all CDS features outside area: {location}")
+        features = []
+        for feature in record.features:
+            if feature.type != "CDS":  # keep all non-CDS features
+                features.append(feature)
+            elif locations_overlap(location, feature.location):
+                features.append(feature)
+        record.features = features
+
+    # remove any previous or obselete antiSMASH annotations to minimise incompatabilities
+    strip_record(record)
+
+    logging.debug("Converting records from biopython to secmet")
+    secmet_record = Record.from_biopython(record, taxon)
+    # if parsable by secmet, it has a better context on what to strip, so run
+    # the secmet stripping to ensure there's no surprises
+    secmet_record.strip_antismash_annotations()
+
+    return [secmet_record]
+
+
+def _run_mibig(sequence_file: Optional[str], options: ConfigType) -> int:
+    """ The real run_mibig, assumes logging is set up around it """
+    options.all_enabled_modules = list(filter(lambda x: x.is_enabled(options), get_all_modules()))
+
+    antismash.main.check_prerequisites(options.all_enabled_modules, options)
+
+    # ensure the provided options are valid
+    if not antismash.main.verify_options(options, options.all_enabled_modules):
+        return 1
+
+    assert annotations.is_enabled(options)
+
+    start_time = datetime.now()
+
+    with open(options.mibig_json) as handle:
+        data = Everything(json.load(handle))
+    loci = data.cluster.loci
+    start = loci.start - 1 if loci.start else 0
+    end = loci.end or 0
+
+    if sequence_file:
+        records = parse_input_sequence(sequence_file, options.taxon, start, end)
+        results = serialiser.AntismashResults(sequence_file.rsplit(os.sep, 1)[-1],
+                                              records, [{} for i in records],
+                                              __version__, taxon=options.taxon)
+    else:
+        results = antismash.main.read_data(sequence_file, options)
+
+    # reset module timings
+    results.timings_by_record.clear()
+
+    antismash.main.prepare_output_directory(options.output_dir, sequence_file or options.reuse_results)
+
+    results.records = pre_process_sequences(results.records, options)
+
+    mibig_rename_records(results.records, options)
+    analysis_modules = [cast(AntismashModule, antismash.modules.clusterblast)]
+
+    for record, module_results in zip(results.records, results.results):
+        # skip if we're not interested in it
+        if record.skip:
+            continue
+        logging.info("Analysing record: %s", record.id)
+        timings = run_mibig_detection(record, options, module_results)
+        assert record.get_regions()
+        analysis_timings = antismash.main.analyse_record(record, options, analysis_modules, module_results)
+        timings.update(analysis_timings)
+        results.timings_by_record[record.id] = timings
+
+    # Write results
+    json_filename = canonical_base_filename(results.input_file, options.output_dir, options)
+    json_filename += ".json"
+    logging.debug("Writing json results to '%s'", json_filename)
+    results.write_to_file(json_filename)
+
+    # now that the json is out of the way, annotate the record
+    # otherwise we could double annotate some areas
+    antismash.main.annotate_records(results)
+
+    # create relevant output files
+    write_outputs(results, options)
+
+    running_time = datetime.now() - start_time
+
+    logging.debug("MIBiG HTML generation finished at %s; runtime: %s",
+                  datetime.now().strftime("%Y-%m-%d %H:%M:%S"), str(running_time))
+
+    logging.info("MIBiG status: SUCCESS")
+    return 0
 
 
 def run_mibig(sequence_file: Optional[str], options: ConfigType) -> int:
@@ -272,6 +385,6 @@ def run_mibig(sequence_file: Optional[str], options: ConfigType) -> int:
                               debug=options.debug):
         orig_analysis_modules = antismash.main.get_analysis_modules
         antismash.main.get_analysis_modules = lambda: [antismash.modules.clusterblast]
-        result = antismash.run_antismash(sequence_file, options)
+        result = _run_mibig(sequence_file, options)
         antismash.main.get_analysis_modules = orig_analysis_modules
     return result
