@@ -7,7 +7,9 @@ from antismash.common.secmet.record import (
     CDSFeature,
     location_bridges_origin,
     Record as ASRecord,
+    SecmetInvalidInputError,
     Seq,
+    SeqFeature,
     SeqRecord,
 )
 
@@ -49,30 +51,29 @@ class Record(ASRecord):
         """
         return tuple(self._altered_from_input)
 
-    def add_cds_feature(self, cds: CDSFeature) -> None:
+    def add_cds_feature(self, cds_feature: CDSFeature) -> None:
         try:
-            super().add_cds_feature(cds)
+            super().add_cds_feature(cds_feature)
             return
         except ValueError as err:
             if "same name for mapping" not in str(err):
                 raise
         # the remaining code here is only reached if adding the CDS raised an error,
         # but it was a duplicate CDS error
-        original_name = cds.get_name()
+        original_name = cds_feature.get_name()
         if original_name not in self._deduplicated_cds_names:
             self._deduplicated_cds_names[original_name] = []
         new_name = "%s_rename%d" % (original_name, len(self._deduplicated_cds_names[original_name]) + 1)
         self._deduplicated_cds_names[original_name].append(new_name)
-        if cds.locus_tag:
-            cds.locus_tag = new_name
-        elif cds.gene:
-            cds.gene = new_name
-        elif cds.protein_id:
-            cds.protein_id = new_name
+        if cds_feature.locus_tag:
+            cds_feature.locus_tag = new_name
+        elif cds_feature.gene:
+            cds_feature.gene = new_name
+        elif cds_feature.protein_id:
+            cds_feature.protein_id = new_name
         assert new_name not in self._cds_by_name
-        self.add_cds_feature(cds)
-        self._altered_from_input.append("CDS with name %s renamed to %s to avoid duplicates" % (
-                                        original_name, new_name))
+        self.add_cds_feature(cds_feature)
+        self.add_alteration(f"CDS with name {original_name} renamed to {new_name} to avoid duplicates")
 
     @classmethod
     def from_biopython(cls: Type[T], seq_record: SeqRecord, taxon: str) -> T:
