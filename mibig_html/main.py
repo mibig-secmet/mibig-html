@@ -10,7 +10,12 @@ from typing import Any, cast, Dict, List, Optional, Union
 import antismash
 from antismash.common import logs
 from antismash.common.record_processing import (
-    pre_process_sequences as _as_pre_process_sequences,
+    AntismashInputError,
+    records_contain_shotgun_scaffolds,
+    generate_unique_id,
+    sanitise_sequence,
+    parallel_function,
+    filter_records_by_name,
 )
 from antismash.detection import (
     cluster_hmmer,
@@ -186,14 +191,65 @@ def mibig_rename_records(records: List[Record], options: ConfigType) -> None:
         record.annotations['accessions'].insert(0, mibig_acc)
 
 
-def pre_processor_wrapper(sequences: List[Record], options: ConfigType, genefinding: AntismashModule) -> List[Record]:
-    sequences = _as_pre_process_sequences(sequences, options, genefinding)
+def pre_process_sequences(sequences: List[Record], options: ConfigType,
+                          _genefinding: AntismashModule) -> List[Record]:
+    """ Custom preprocess to remove restrictions from normal antiSMASH runs
+
+        Arguments:
+            sequences: the secmet.Record instances to process
+            options: an antismash Config instance
+            genefinding: the module to use for genefinding (not used here)
+
+        Returns:
+            A list of altered secmet.Record
+    """
+    logging.debug("Preprocessing %d sequences", len(sequences))
+
+    # catch WGS master or supercontig entries
+    if records_contain_shotgun_scaffolds(sequences):
+        raise AntismashInputError("incomplete whole genome shotgun records are not supported")
+
+    for i, seq in enumerate(sequences):
+        seq.record_index = i + 1  # 1-indexed
+
+    checking_required = not (options.reuse_results or options.skip_sanitisation)
+
+    # keep sequences as clean as possible and make sure they're valid
+    if checking_required:
+        logging.debug("Sanitising record ids and sequences")
+        # Ensure all records have unique names
+        all_record_ids = {seq.id for seq in sequences}
+        if len(all_record_ids) < len(sequences):
+            all_record_ids = set()
+            for record in sequences:
+                if record.id in all_record_ids:
+                    record.original_id = record.id
+                    record.id = generate_unique_id(record.id, all_record_ids)[0]
+                all_record_ids.add(record.id)
+            assert len(all_record_ids) == len(sequences), "%d != %d" % (len(all_record_ids), len(sequences))
+        if len(sequences) == 1:
+            sequences = [sanitise_sequence(sequences[0])]
+        else:
+            sequences = parallel_function(sanitise_sequence, ([record] for record in sequences))
+
+    for record in sequences:
+        if record.skip or not record.seq:
+            logging.warning("Record %s has no sequence, skipping.", record.id)
+        if not record.id:
+            raise AntismashInputError("record has no name")
+
+    # skip anything not matching the filter
+    filter_records_by_name(sequences, options.limit_to_record)
+
+    if all(sequence.skip for sequence in sequences):
+        raise AntismashInputError("all records skipped")
+
     mibig_rename_records(sequences, options)
     return sequences
 
 
 antismash.main.write_outputs = write_outputs
-antismash.main.record_processing.pre_process_sequences = pre_processor_wrapper
+antismash.main.record_processing.pre_process_sequences = pre_process_sequences
 antismash.main.record_processing.Record = Record
 antismash.main.run_detection = run_mibig_detection
 
