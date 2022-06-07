@@ -1,7 +1,7 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Type, TypeVar, Union
 
 from antismash.common.secmet.record import (
     CDSFeature,
@@ -10,6 +10,17 @@ from antismash.common.secmet.record import (
     Seq,
     SeqRecord,
 )
+
+T = TypeVar("T", bound="Record")
+
+
+def _get_biopython_cds_name(feature: SeqFeature) -> str:
+    name = ""
+    for qual in ["locus_tag", "gene", "protein_id"]:
+        name = feature.qualifiers.get(qual, [""])[0]
+        if name:
+            break
+    return name
 
 
 class Record(ASRecord):
@@ -63,8 +74,8 @@ class Record(ASRecord):
         self._altered_from_input.append("CDS with name %s renamed to %s to avoid duplicates" % (
                                         original_name, new_name))
 
-    @staticmethod
-    def from_biopython(seq_record: SeqRecord, taxon: str) -> "Record":
+    @classmethod
+    def from_biopython(cls: Type[T], seq_record: SeqRecord, taxon: str) -> T:
         # handle some entry reference records being mislabeled as RNA (e.g. BGCs 488, 720, 1166)
         molecule_type = seq_record.annotations.get("molecule_type", "DNA")
         if not molecule_type.upper().endswith("DNA"):
@@ -74,16 +85,8 @@ class Record(ASRecord):
         names = set()
         for feature in seq_record.features:
             if can_be_circular and location_bridges_origin(feature.location, allow_reversing=False):
-                name = ""
-                for qual in ["locus_tag", "gene", "protein_id"]:
-                    name = feature.qualifiers.get(qual, [""])[0]
-                    if name:
-                        break
-                if not name:
-                    name = "a feature"
-                names.add(name)
-        as_record = ASRecord.from_biopython(seq_record, taxon)
-        record = Record.from_antismash_record(as_record)
+                names.add(_get_biopython_cds_name(feature))
+        record = super().from_biopython(seq_record, taxon)
         for name in sorted(names):
             record.add_alteration(f"{name} crossed the origin and was split into two features")
         return record
