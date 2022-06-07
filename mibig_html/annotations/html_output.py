@@ -142,8 +142,9 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
         html.add_detail_section("Terpene", render_template("terpene.html", trp=results.data.cluster.terpene),
                                 class_name="mibig-terpene")
 
-    html.add_detail_section("History", render_template("logs.html", logs=sorted(results.data.changelog, key=lambda log: log.mibig_version)),
-                                class_name="mibig-logs")
+    logs = sorted(results.data.changelog, key=lambda log: log.mibig_version)
+    html.add_detail_section("History", render_template("logs.html", logs=logs),
+                            class_name="mibig-logs")
 
     return html
 
@@ -175,7 +176,7 @@ class ReferenceCollection:
 
     def __init__(self, publications: List[Publication]) -> None:
         self.client = Client(api_key=os.environ.get("NCBI_API_KEY", None))
-        self.references = {}  # Dict[ReferenceLink]
+        self.references = {}
         pmids = []
 
         for publication in publications:
@@ -197,7 +198,6 @@ class ReferenceCollection:
 
     def get_links(self) -> List[ReferenceLink]:
         return list(self.references.values())
-
 
     def _resolve_pmids(self, pmids: List[str]) -> None:
         if not pmids:
