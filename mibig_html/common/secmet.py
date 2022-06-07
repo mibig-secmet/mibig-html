@@ -103,13 +103,3 @@ class Record(ASRecord):
         for name in sorted(names):
             record.add_alteration(f"{name} crossed the origin and was split into two features")
         return record
-
-    @classmethod
-    def from_antismash_record(cls, existing: ASRecord) -> "Record":
-        new = cls(existing.seq)
-        for key in existing.__slots__:
-            try:
-                setattr(new, key, getattr(existing, key))
-            except AttributeError:
-                continue
-        return new
