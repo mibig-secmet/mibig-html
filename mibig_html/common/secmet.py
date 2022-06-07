@@ -75,6 +75,18 @@ class Record(ASRecord):
         self.add_cds_feature(cds_feature)
         self.add_alteration(f"CDS with name {original_name} renamed to {new_name} to avoid duplicates")
 
+    def add_biopython_feature(self, feature: SeqFeature) -> None:
+        try:
+            super().add_biopython_feature(feature)
+        except SecmetInvalidInputError as err:
+            if "translation longer than location allows" not in str(err):
+                raise
+            # regenerate the translation
+            feature.qualifiers.pop("translation")
+            super().add_biopython_feature(feature)
+            name = _get_biopython_cds_name(feature)
+            self.add_alteration(f"the translation of {name} was too long and was regenerated")
+
     @classmethod
     def from_biopython(cls: Type[T], seq_record: SeqRecord, taxon: str) -> T:
         # handle some entry reference records being mislabeled as RNA (e.g. BGCs 488, 720, 1166)
