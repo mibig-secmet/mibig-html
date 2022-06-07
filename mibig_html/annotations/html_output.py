@@ -180,6 +180,8 @@ class ReferenceCollection:
 
         for publication in publications:
             if publication.category == "pubmed":
+                if publication.content == "0":
+                    continue
                 reference = "https://www.ncbi.nlm.nih.gov/pubmed/{}".format(publication.content)
                 pmids.append(publication.content)
             elif publication.category == "patent":
