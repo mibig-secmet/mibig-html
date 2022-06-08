@@ -83,7 +83,7 @@ def _main(json_path: str, gbk_folder: str, cache_folder: str, output_folder: str
     if os.path.exists(reusable_json_path):
         options = antismash.config.build_config(args + ["--reuse-results", reusable_json_path], parser=parser, modules=all_modules)
         try:
-            antismash.run_antismash("", options)
+            mibig_html.run_mibig("", options)
             success = True
             write_log("Successfully reused JSON file {}".format(reusable_json_path), log_file_path)
         except Exception as err:
