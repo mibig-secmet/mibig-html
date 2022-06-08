@@ -73,7 +73,7 @@ class Record(ASRecord):
             cds_feature.protein_id = new_name
         assert new_name not in self._cds_by_name
         self.add_cds_feature(cds_feature)
-        self.add_alteration(f"CDS with name {original_name} renamed to {new_name} to avoid duplicates")
+        self.add_alteration(f"CDS with name {original_name} at {cds_feature.location} renamed to {new_name} to avoid duplicates")
 
     def add_biopython_feature(self, feature: SeqFeature) -> None:
         try:
