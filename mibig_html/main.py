@@ -322,7 +322,10 @@ def _run_mibig(sequence_file: Optional[str], options: ConfigType) -> int:
                                               records, [{} for i in records],
                                               __version__, taxon=options.taxon)
     else:
+        orig_record = antismash.common.serialiser.Record
+        antismash.common.serialiser.Record = Record
         results = antismash.main.read_data(sequence_file, options)
+        antismash.common.serialiser.Record = orig_record
 
     # reset module timings
     results.timings_by_record.clear()
