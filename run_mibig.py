@@ -110,10 +110,10 @@ def _main(json_path: str, gbk_folder: str, cache_folder: str, output_folder: str
     with open(os.path.join(output_path, "{}.1.json".format(mibig_acc)), "r") as result_json_txt:
         result_json = json.load(result_json_txt)
         assert len(result_json["records"]) == 1 and annotations.__name__ in result_json["records"][0]["modules"]
-    region_acc = "{}.1.region001".format(mibig_acc)
-    region_gbk_path = os.path.join(output_path, "{}.gbk".format(region_acc))
+    prefix = f"{mibig_acc}.1"
+    region_gbk_path = os.path.join(output_path, f"{prefix}.gbk")
     output_path = os.path.join(output_path, "generated")
-    reusable_as5_json_path = os.path.join(output_path, "{}.json".format(region_acc))
+    reusable_as5_json_path = os.path.join(output_path, f"{prefix}.json")
     region_length = len(Record.from_genbank(region_gbk_path, taxon=taxon)[0].seq)
 
     if taxon in ["bacteria", "fungi"]:

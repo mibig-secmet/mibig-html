@@ -151,21 +151,20 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
     svg.write(options, module_results_per_record)
 
     # convert records to biopython
-    bio_records = [record.to_biopython() for record in results.records]
+    assert len(results.records) == 1
+    record = results.records[0]
+    bio_record = record.to_biopython()
 
     # add antismash meta-annotation to records
-    add_antismash_comments(list(zip(results.records, bio_records)), options)
-
-    logging.debug("Writing cluster-specific genbank files")
-    for record, bio_record in zip(results.records, bio_records):
-        for region in record.get_regions():
-            region.write_to_genbank(directory=options.output_dir, record=bio_record)
+    add_antismash_comments(list(zip(results.records, [bio_record])), options)
 
     # write records to an aggregate output
+    assert len(record.get_regions()) == 1
+    region = record.get_regions()[0]
     base_filename = canonical_base_filename(results.input_file, options.output_dir, options)
-    combined_filename = base_filename + ".gbk"
-    logging.debug("Writing final genbank file to '%s'", combined_filename)
-    SeqIO.write(bio_records, combined_filename, "genbank")
+    filename = f"{base_filename}.gbk"
+    logging.debug("Writing final genbank file to '%s'", filename)
+    region.write_to_genbank(filename=filename, directory=options.output_dir, record=bio_record)
 
     zipfile = base_filename + ".zip"
     if os.path.exists(zipfile):
