@@ -165,8 +165,7 @@ def _main(json_path: str, gbk_folder: str, cache_folder: str, output_folder: str
             write_log("Failed to generate antiSMASH page for {}".format(mibig_acc), log_file_path)
             return 1
     elif taxon == "plants":
-        write_log("Plant BGCs {}".format(mibig_acc), log_file_path)
-        print("Plant BGC is temporarily not supported")
+        write_log("Failed to generate antiSMASH page for plant BGC {}".format(mibig_acc), log_file_path)
         return 1
     return 0
 
