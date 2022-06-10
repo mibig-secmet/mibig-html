@@ -163,6 +163,10 @@ def mibig_loader(annotations_file: str, cache_file: str, record: Record) -> Mibi
     if data.cluster.saccharide:
         for transferase in data.cluster.saccharide.glycosyltransferases:
             referenced.add(transferase.gene_id)
+    for compound in data.cluster.compounds:
+        for moiety in compound.chem_moieties:
+            if moiety.subcluster:
+                referenced.update(set(moiety.subcluster))
 
     missing = referenced.difference(existing)
     if missing:
