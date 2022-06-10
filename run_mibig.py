@@ -160,6 +160,12 @@ def _main(json_path: str, gbk_folder: str, cache_folder: str, output_folder: str
                 run_success = run(command + args + [region_gbk_path])
         if reuse_as5_success or run_success:
             write_log("Successfully generated antiSMASH page for {}".format(mibig_acc), log_file_path)
+            # finally, ensure the freshly generated genbank is loadable
+            try:
+                antismash.common.secmet.Record.from_genbank(os.path.join(output_path, f"{prefix}.gbk"), taxon=taxon)
+            except antismash.common.secmet.errors.SecmetInvalidInputError as err:
+                write_log(f"antiSMASH genbank for {mibig_acc} cannot be re-parsed", log_file_path)
+                return 1
         else:
             if os.path.exists(output_path):
                 rmtree(output_path)
