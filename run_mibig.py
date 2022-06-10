@@ -187,4 +187,7 @@ if __name__ == "__main__":
     parser.add_argument("mibig_version", type=str, help="The version of mibig to display in results")
 
     args = parser.parse_args()
-    sys.exit(_main(args.json, args.genbanks, args.cache, args.output, args.logfile, args.mibig_version))
+    if _main(args.json, args.genbanks, args.cache, args.output, args.logfile, args.mibig_version):
+        print("Errors were encountered, see log file for details")
+        sys.exit(1)
+    sys.exit(0)
