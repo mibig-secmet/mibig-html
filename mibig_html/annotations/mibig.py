@@ -140,6 +140,34 @@ def mibig_loader(annotations_file: str, cache_file: str, record: Record) -> Mibi
                 if annot.product:
                     cds_feature.product = annot.product
 
+    existing = set()
+    for cds in record.get_cds_features():
+        for name in [cds.locus_tag, cds.protein_id, cds.gene]:
+            if name is not None:
+                existing.add(name)
+
+    referenced = set()
+    if data.cluster.genes and data.cluster.genes.annotations:
+        for gene in data.cluster.genes.annotations:
+            referenced.add(gene.id)
+    if data.cluster.nrp:
+        for nrps_gene in data.cluster.nrp.nrps_genes:
+            referenced.add(nrps_gene.gene_id)
+        for thio in data.cluster.nrp.thioesterases:
+            referenced.add(thio.gene)
+    if data.cluster.polyketide:
+        for synthase in data.cluster.polyketide.synthases:
+            referenced.update(set(synthase.genes))
+            for module in synthase.modules:
+                referenced.update(set(module.genes))
+    if data.cluster.saccharide:
+        for transferase in data.cluster.saccharide.glycosyltransferases:
+            referenced.add(transferase.gene_id)
+
+    missing = referenced.difference(existing)
+    if missing:
+        raise ValueError(f"{data.cluster.mibig_accession} refers to missing genes: {', '.join(sorted(missing))}")
+
     return MibigAnnotations(record.id, area, data, cache_file)
 
 
