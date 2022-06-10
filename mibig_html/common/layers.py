@@ -8,6 +8,7 @@ from antismash.common.layers import (
 
 
 class OptionsLayer(_OptionsLayer):
+    @property
     def base_url(self) -> str:
         return "https://mibig.secondarymetabolites.org/"
 
