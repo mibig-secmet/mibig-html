@@ -141,6 +141,7 @@ def _main(json_path: str, gbk_folder: str, cache_folder: str, output_folder: str
             "--minlength", "1",
             "--html-title", "{}".format(mibig_acc),
             "--cb-known",
+            "--cc-mibig",
             "--taxon", taxon,
             "--output-dir", output_path,
         ]
