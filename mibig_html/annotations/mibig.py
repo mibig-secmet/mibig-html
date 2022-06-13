@@ -121,7 +121,7 @@ def mibig_loader(annotations_file: str, cache_file: str, record: Record) -> Mibi
                 location = CompoundLocation(exons) if len(exons) > 1 else exons[0]
                 translation = gene.translation or record.get_aa_translation_from_location(location)
                 cds_feature = CDSFeature(location=location, locus_tag=gene.id, translation=translation)
-                record.add_cds_feature(cds_feature)
+                record.add_cds_feature(cds_feature, auto_deduplicate=False)
                 record.add_alteration(f"{cds_feature.get_name()} was added")
         # re-annotation
         for cds_feature in record.get_cds_features_within_location(area.location):

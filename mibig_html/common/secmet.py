@@ -1,6 +1,7 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+from collections import defaultdict
 from typing import Any, Dict, List, Tuple, Type, TypeVar, Union
 
 from antismash.common.secmet.record import (
@@ -30,7 +31,7 @@ class Record(ASRecord):
         super().__init__(seq, transl_table=transl_table, **kwargs)
 
         self._altered_from_input: List[str] = []
-        self._deduplicated_cds_names: Dict[str, List[str]] = {}
+        self._deduplicated_cds_names: Dict[str, List[str]] = defaultdict(list)
 
     def __getattr__(self, attr: str) -> Any:
         # passthroughs to the original SeqRecord
@@ -51,29 +52,44 @@ class Record(ASRecord):
         """
         return tuple(self._altered_from_input)
 
-    def add_cds_feature(self, cds_feature: CDSFeature) -> None:
-        try:
+    def add_cds_feature(self, cds_feature: CDSFeature, auto_deduplicate: bool = True) -> None:
+        if not auto_deduplicate:
             super().add_cds_feature(cds_feature)
             return
-        except ValueError as err:
-            if "same name for mapping" not in str(err):
-                raise
-        # the remaining code here is only reached if adding the CDS raised an error,
-        # but it was a duplicate CDS error
+
         original_name = cds_feature.get_name()
-        if original_name not in self._deduplicated_cds_names:
-            self._deduplicated_cds_names[original_name] = []
-        new_name = "%s_rename%d" % (original_name, len(self._deduplicated_cds_names[original_name]) + 1)
-        self._deduplicated_cds_names[original_name].append(new_name)
-        if cds_feature.locus_tag:
+        duplicate_name = original_name in self._cds_by_name
+        duplicate_location = str(cds_feature.location) in self._cds_by_location
+
+        if not duplicate_name and not duplicate_location:
+            super().add_cds_feature(cds_feature)
+            return
+
+        if duplicate_location and duplicate_name:
+            self.add_alteration(f"removed an exact duplicate of CDS feature {cds_feature.get_name()}")
+            return
+
+        if duplicate_location:
+            existing = self._cds_by_location[str(cds_feature.location)]
+            self.add_alteration(f"removed {cds_feature.get_name()} as a duplicate of {existing.get_name()}")
+            return
+
+        # which leaves only names matching, so a rename is appropriate
+        count = len(self._deduplicated_cds_names[original_name]) + 1
+        new_name = f"{original_name}_rename{count}"
+
+        # update the original name field with the new name
+        if cds_feature.locus_tag == original_name:
             cds_feature.locus_tag = new_name
-        elif cds_feature.gene:
+        elif cds_feature.gene == original_name:
             cds_feature.gene = new_name
-        elif cds_feature.protein_id:
+        elif cds_feature.protein_id == original_name:
             cds_feature.protein_id = new_name
-        assert new_name not in self._cds_by_name
-        self.add_cds_feature(cds_feature)
-        self.add_alteration(f"CDS with name {original_name} at {cds_feature.location} renamed to {new_name} to avoid duplicates")
+
+        # then add the modified feature and log the alteration
+        super().add_cds_feature(cds_feature)
+        self._deduplicated_cds_names[original_name].append(new_name)
+        self.add_alteration(f"renamed CDS with name {original_name} at {cds_feature.location} to {new_name} to avoid duplicates")
 
     def add_biopython_feature(self, feature: SeqFeature) -> None:
         try:
