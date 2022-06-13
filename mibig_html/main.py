@@ -271,7 +271,7 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria",
 
     # before conversion to secmet records, remove any irrelevant CDS features if possible
     if start > 0 or end != 0:
-        if end == -1:
+        if end == 0:
             end = len(record.seq)
         location = FeatureLocation(start, end)
         logging.critical(f"removing all CDS features outside area: {location}")
