@@ -15,7 +15,11 @@ import time
 from antismash.common.errors import AntismashInputError
 from antismash.common.module_results import DetectionResults
 from antismash.common.secmet import CDSFeature, SubRegion, Record
-from antismash.common.secmet.locations import FeatureLocation, CompoundLocation
+from antismash.common.secmet.locations import (
+    CompoundLocation,
+    FeatureLocation,
+    location_contains_other,
+)
 
 from urllib.error import HTTPError
 from mibig.converters.read.top import Everything
@@ -116,9 +120,10 @@ def mibig_loader(annotations_file: str, cache_file: str, record: Record) -> Mibi
         # extra genes
         for gene in data.cluster.genes.extra_genes:
             if gene.id and gene.location:
-                # todo: check if exist in gbk
                 exons = [FeatureLocation(exon.start - 1, exon.end, strand=gene.location.strand) for exon in gene.location.exons]
                 location = CompoundLocation(exons) if len(exons) > 1 else exons[0]
+                if not location_contains_other(area.location, location):
+                    raise ValueError(f"additional gene {gene.id} lies outside cluster")
                 translation = gene.translation or record.get_aa_translation_from_location(location)
                 cds_feature = CDSFeature(location=location, locus_tag=gene.id, translation=translation)
                 record.add_cds_feature(cds_feature, auto_deduplicate=False)
