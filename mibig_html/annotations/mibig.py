@@ -79,12 +79,10 @@ class MibigAnnotations(DetectionResults):
             logging.debug("Previous result's start/end coordinate is not the same as the new one")
             can_reuse = False
         elif len(gene_annotations) != len(prev["gene_annotations"]):
-            # lame implementation, fix when have time
-            logging.debug("Updated gene annotations")
+            logging.debug("Gene annotations have changed")
             can_reuse = False
         elif len(extra_genes) != len(prev["extra_genes"]):
-            # lame implementation, fix when have time
-            logging.debug("Updated gene annotations")
+            logging.debug("Additional genes have changed")
             can_reuse = False
 
         # if we can't reuse, stop running antismash, because CDS annotations won't be correct
@@ -97,7 +95,7 @@ class MibigAnnotations(DetectionResults):
             area = SubRegion(loci_region, tool="mibig", label=product)
             return MibigAnnotations(record.id, area, data, cache_file)
         else:
-            logging.error("Can't reuse MIBiG annotation, please turn off --reuse-results. Exiting..")
+            logging.error("Can't reuse MIBiG annotation.")
             raise AntismashInputError("Genbank record or gene annotations are updated, can't reuse result")
 
 
