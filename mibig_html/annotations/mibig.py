@@ -28,7 +28,7 @@ from mibig.converters.read.top import Everything
 class MibigAnnotations(DetectionResults):
     def __init__(self, record_id: str, area: SubRegion, data: Everything, cache_file: str) -> None:
         super().__init__(record_id)
-        self.data = data # holds the original annotation json data
+        self.data = data  # holds the original annotation json data
         # save calculated loci (relative to record), not annotated ones
         self.record_id = record_id
         self.area = area
@@ -75,7 +75,7 @@ class MibigAnnotations(DetectionResults):
         elif record.id != prev["record_id"]:
             logging.debug("Previous result's record_id is not the same as the new one")
             can_reuse = False
-        elif (loci.start or -1)  != prev["coords"][0] or (loci.end or -1) != prev["coords"][1]:
+        elif (loci.start or -1) != prev["coords"][0] or (loci.end or -1) != prev["coords"][1]:
             logging.debug("Previous result's start/end coordinate is not the same as the new one")
             can_reuse = False
         elif len(gene_annotations) != len(prev["gene_annotations"]):
@@ -241,7 +241,7 @@ def get_ncbi_taxonomy(tax_id: str, email: str) -> List[Dict[str, Any]]:
             pass
         num_try += 1
         time.sleep(5)
-    if len(taxonomy) > 1: # shuffle species to the end of the list
+    if len(taxonomy) > 1:  # shuffle species to the end of the list
         taxonomy.append(taxonomy.pop(0))
 
     return taxonomy
