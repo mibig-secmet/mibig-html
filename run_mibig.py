@@ -33,7 +33,7 @@ def write_log(text: str, file_path: str) -> None:
 
 
 def _main(json_path: str, gbk_folder: str, cache_folder: str, output_folder: str,
-          log_file_path: str, mibig_version: str) -> int:
+          log_file_path: str, mibig_version: str, mibig_only: bool) -> int:
     for path in [cache_folder, output_folder]:
         if not os.path.exists(path):
             os.makedirs(path)
@@ -59,7 +59,8 @@ def _main(json_path: str, gbk_folder: str, cache_folder: str, output_folder: str
     elif "Viridiplantae" in taxonomy:
         taxon = "plants"
     else:
-        write_log("Unrecognizable taxons {} ({})".format(mibig_acc, ":".join(taxonomy)), log_file_path)
+        write_log("Unrecognizable taxons {} ({})".format(
+            mibig_acc, ":".join(taxonomy)), log_file_path)
         return 1
 
     args = [
@@ -81,7 +82,8 @@ def _main(json_path: str, gbk_folder: str, cache_folder: str, output_folder: str
     print("Generating MIBiG output for {}".format(mibig_acc))
     success = False
     if os.path.exists(reusable_json_path):
-        options = antismash.config.build_config(args + ["--reuse-results", reusable_json_path], parser=parser, modules=all_modules)
+        options = antismash.config.build_config(
+            args + ["--reuse-results", reusable_json_path], parser=parser, modules=all_modules)
         try:
             mibig_html.run_mibig("", options)
             success = True
@@ -106,10 +108,14 @@ def _main(json_path: str, gbk_folder: str, cache_folder: str, output_folder: str
             return 1
     write_log("Successfully generated MIBiG page for {}".format(mibig_acc), log_file_path)
 
+    if mibig_only:
+        return 0
+
     print("Generating antiSMASH output for {}".format(mibig_acc))
     with open(os.path.join(output_path, "{}.1.json".format(mibig_acc)), "r") as result_json_txt:
         result_json = json.load(result_json_txt)
-        assert len(result_json["records"]) == 1 and annotations.__name__ in result_json["records"][0]["modules"]
+        assert len(result_json["records"]
+                   ) == 1 and annotations.__name__ in result_json["records"][0]["modules"]
     prefix = f"{mibig_acc}.1"
     region_gbk_path = os.path.join(output_path, f"{prefix}.gbk")
     output_path = os.path.join(output_path, "generated")
@@ -162,7 +168,8 @@ def _main(json_path: str, gbk_folder: str, cache_folder: str, output_folder: str
             write_log("Successfully generated antiSMASH page for {}".format(mibig_acc), log_file_path)
             # finally, ensure the freshly generated genbank is loadable
             try:
-                antismash.common.secmet.Record.from_genbank(os.path.join(output_path, f"{prefix}.gbk"), taxon=taxon)
+                antismash.common.secmet.Record.from_genbank(
+                    os.path.join(output_path, f"{prefix}.gbk"), taxon=taxon)
             except antismash.common.secmet.errors.SecmetInvalidInputError as err:
                 write_log(f"antiSMASH genbank for {mibig_acc} cannot be re-parsed", log_file_path)
                 return 1
@@ -184,10 +191,12 @@ if __name__ == "__main__":
     parser.add_argument("cache", type=str, help="The cache directory for the MIBiG module")
     parser.add_argument("output", type=str, help="The directory to save results in")
     parser.add_argument("logfile", type=str, help="The path of the log file to use")
-    parser.add_argument("mibig_version", type=str, help="The version of mibig to display in results")
-
+    parser.add_argument("mibig_version", type=str,
+                        help="The version of mibig to display in results")
+    parser.add_argument("-m", "--mibig-only", action="store_true",
+                        help="Only run the MIBiG generation, skip full antiSMASH run")
     args = parser.parse_args()
-    if _main(args.json, args.genbanks, args.cache, args.output, args.logfile, args.mibig_version):
+    if _main(args.json, args.genbanks, args.cache, args.output, args.logfile, args.mibig_version, args.mibig_only):
         print("Errors were encountered, see log file for details")
         sys.exit(1)
     sys.exit(0)
