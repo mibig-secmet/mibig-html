@@ -19,5 +19,7 @@ __pycache__
 .vim/*
 pip-delete-this-directory.txt
 pip-egg-info/*
+tax_cache.json
+output/*
 
 # generated during make test

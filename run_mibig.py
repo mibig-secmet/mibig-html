@@ -16,10 +16,10 @@ from typing import List
 import antismash
 from antismash.common.subprocessing import execute
 from mibig.converters.read.top import Everything
+from mibig_taxa import TaxonCache
 
 import mibig_html
 from mibig_html import annotations
-from mibig_html.annotations.mibig import load_cached_information
 from mibig_html.common.secmet import Record
 
 
@@ -32,11 +32,10 @@ def write_log(text: str, file_path: str) -> None:
         o.write("[{}] {}\n".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), text))
 
 
-def _main(json_path: str, gbk_folder: str, cache_folder: str, output_folder: str,
+def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
           log_file_path: str, mibig_version: str, mibig_only: bool) -> int:
-    for path in [cache_folder, output_folder]:
-        if not os.path.exists(path):
-            os.makedirs(path)
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
 
     with open(json_path, "r") as json_file:
         raw = json.load(json_file)
@@ -44,23 +43,15 @@ def _main(json_path: str, gbk_folder: str, cache_folder: str, output_folder: str
     mibig_acc = data.cluster.mibig_accession
     gbk_acc = data.cluster.loci.accession
     gbk_path = os.path.join(gbk_folder, "{}.gbk".format(gbk_acc))
-    cache_json_path = os.path.join(cache_folder, "{}.cache.json".format(mibig_acc))
     output_path = os.path.join(output_folder, mibig_acc)
     reusable_json_path = os.path.join(output_path, "{}.1.json".format(mibig_acc))
 
     # load/populate cache in advance, because it is needed to fetch taxonomy information
-    cached = load_cached_information(data, cache_json_path, True)
-    taxonomy = [tax_obj["name"] for tax_obj in cached["taxonomy"][data.cluster.ncbi_tax_id]]
-
-    if "Bacteria" in taxonomy:
-        taxon = "bacteria"
-    elif "Fungi" in taxonomy:
-        taxon = "fungi"
-    elif "Viridiplantae" in taxonomy:
-        taxon = "plants"
-    else:
-        write_log("Unrecognizable taxons {} ({})".format(
-            mibig_acc, ":".join(taxonomy)), log_file_path)
+    cache = TaxonCache(cache_path)
+    try:
+        taxon = cache.get_antismash_taxon(int(data.cluster.ncbi_tax_id))
+    except ValueError as err:
+        write_log(f"Unrecongnisable taxon {mibig_acc}: {err}", log_file_path)
         return 1
 
     args = [
@@ -71,7 +62,7 @@ def _main(json_path: str, gbk_folder: str, cache_folder: str, output_folder: str
         "--genefinding-tool", "none",
         "--allow-long-headers",
         "--mibig-json", json_path,
-        "--mibig-cache-json", cache_json_path,
+        "--mibig-cache-json", cache_path,
         "--output-dir", output_path,
         "--output-basename", f"{mibig_acc}.1",
     ]
@@ -188,11 +179,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("json", type=str, help="The JSON file for the entry to run")
     parser.add_argument("genbanks", type=str, help="The directory containing genbank files")
-    parser.add_argument("cache", type=str, help="The cache directory for the MIBiG module")
     parser.add_argument("output", type=str, help="The directory to save results in")
     parser.add_argument("logfile", type=str, help="The path of the log file to use")
     parser.add_argument("mibig_version", type=str,
                         help="The version of mibig to display in results")
+    parser.add_argument("-c", "--cache", type=str, default="tax_cache.json",
+                        help="The cache file containing the mibig-taxa cache")
     parser.add_argument("-m", "--mibig-only", action="store_true",
                         help="Only run the MIBiG generation, skip full antiSMASH run")
     args = parser.parse_args()

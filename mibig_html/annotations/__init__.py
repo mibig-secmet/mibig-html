@@ -36,7 +36,7 @@ def get_arguments() -> ModuleArgs:
                     metavar="JSON",
                     type=str,
                     default="",
-                    help=("Sideload cache JSON for MIBiG annotations."))
+                    help=("Sideload cache JSON for MIBiG taxon annotations."))
     return args
 
 
