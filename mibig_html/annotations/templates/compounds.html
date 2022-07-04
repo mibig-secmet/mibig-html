@@ -38,13 +38,13 @@
       Chemical database entries<br>
       {% for entry in compound.database_id %}
       {% if entry.db == "npatlas" %}
-      <a href="https://www.npatlas.org/explore/compounds/NPA{{'%06d' % entry.reference|int}}">NPAtlas</a><br>
+      <a href="https://www.npatlas.org/explore/compounds/{{entry.reference}}">NPAtlas</a><br>
       {% elif entry.db == "pubchem" %}
       <a href="https://pubchem.ncbi.nlm.nih.gov/compound/{{entry.reference}}">PubCHEM</a><br>
       {% elif entry.db == "chebi" %}
       <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI%3A{{entry.reference}}">ChEBI</a><br>
       {% elif entry.db == "chembl" %}
-      <a href="https://www.ebi.ac.uk/chembl/compound_report_card/CHEMBL{{entry.reference}}">ChEMBL</a><br>
+      <a href="https://www.ebi.ac.uk/chembl/compound_report_card/{{entry.reference}}">ChEMBL</a><br>
       {% elif entry.db == "chemspider" %}
       <a href="http://www.chemspider.com/Chemical-Structure.{{entry.reference}}.html">ChemSpider</a><br>
       {% endif %}
