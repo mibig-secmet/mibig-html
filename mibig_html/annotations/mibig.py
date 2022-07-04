@@ -172,6 +172,8 @@ def mibig_loader(annotations_file: str, cache_file: str, pubmed_cache_file: str,
         for moiety in compound.chem_moieties:
             if moiety.subcluster:
                 referenced.update(set(moiety.subcluster))
+    if data.cluster.terpene:
+        referenced.update(data.cluster.terpene.prenyltransferases)
 
     missing = referenced.difference(existing)
     if missing:
