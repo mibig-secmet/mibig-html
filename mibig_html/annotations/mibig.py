@@ -4,13 +4,9 @@
 """ MiBIG specific sideloading """
 
 import json
-from os import path
 import os
 from typing import Any, Dict, List, Optional
 import logging
-
-from xml.dom import minidom
-import time
 
 from antismash.common.errors import AntismashInputError
 from antismash.common.module_results import DetectionResults
@@ -21,7 +17,6 @@ from antismash.common.secmet.locations import (
     location_contains_other,
 )
 
-from urllib.error import HTTPError
 from mibig.converters.read.top import Everything
 from mibig_taxa import TaxonCache  # pylint: disable=no-name-in-module
 
