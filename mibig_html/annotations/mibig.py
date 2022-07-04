@@ -23,7 +23,7 @@ from antismash.common.secmet.locations import (
 
 from urllib.error import HTTPError
 from mibig.converters.read.top import Everything
-from mibig_taxa import TaxonCache
+from mibig_taxa import TaxonCache  # pylint: disable=no-name-in-module
 
 
 class MibigAnnotations(DetectionResults):
