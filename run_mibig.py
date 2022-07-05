@@ -11,6 +11,7 @@ import os
 from shutil import rmtree
 import sys
 from tempfile import NamedTemporaryFile
+import traceback
 from typing import List
 
 import antismash
@@ -83,24 +84,24 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
     parser = antismash.config.args.build_parser(from_config_file=True, modules=all_modules)
 
     print("Generating MIBiG output for {}".format(mibig_acc))
-    success = False
+    could_reuse = False
+    operation = "generated"
     if os.path.exists(reusable_json_path):
         options = antismash.config.build_config(
             args + ["--reuse-results", reusable_json_path], parser=parser, modules=all_modules)
         try:
             mibig_html.run_mibig("", options)
-            success = True
-            write_log("Successfully reused JSON file {}".format(reusable_json_path), log_file_path)
+            could_reuse = True
+            operation = "reused"
         except Exception as err:
-            write_log(f"Failed to reuse JSON file {reusable_json_path}: {err}", log_file_path)
-            success = False
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            traceback.print_exception(exc_type, exc_value, exc_traceback)
 
-    if not success:
+    if not could_reuse:
         options = antismash.config.build_config(args, parser=parser, modules=all_modules)
         if os.path.exists(output_path):
             # remove output path, proceed with caution!
             rmtree(output_path)
-            write_log("Removed {}".format(output_path), log_file_path)
         try:
             mibig_html.run_mibig(gbk_path, options)
         except Exception as err:
@@ -109,7 +110,7 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
                 rmtree(output_path)
             raise
             return 1
-    write_log("Successfully generated MIBiG page for {}".format(mibig_acc), log_file_path)
+    write_log(f"Successfully {operation} MIBiG page for {mibig_acc}", log_file_path)
 
     if mibig_only or orig_taxon == "plants":
         return 0
