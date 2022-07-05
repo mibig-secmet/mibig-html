@@ -2,7 +2,7 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 from collections import defaultdict
-from typing import Any, Dict, List, Tuple, Type, TypeVar, Union
+from typing import Any, Dict, List, Set, Tuple, Type, TypeVar, Union
 
 from antismash.common.secmet.record import (
     CDSFeature,
@@ -32,6 +32,7 @@ class Record(ASRecord):
 
         self._altered_from_input: List[str] = []
         self._deduplicated_cds_names: Dict[str, List[str]] = defaultdict(list)
+        self._alternative_names: Dict[str, Set[str]] = defaultdict(set)
 
     def __getattr__(self, attr: str) -> Any:
         # passthroughs to the original SeqRecord
@@ -53,7 +54,15 @@ class Record(ASRecord):
         return tuple(self._altered_from_input)
 
     def add_cds_feature(self, cds_feature: CDSFeature, auto_deduplicate: bool = True) -> None:
+        def add_alternative_names() -> None:
+            real_name = cds_feature.get_name()
+            for alternative in [cds_feature.locus_tag, cds_feature.gene, cds_feature.protein_id]:
+                if alternative:
+                    self._alternative_names[alternative].add(real_name)
+            assert real_name in self._alternative_names
+
         if not auto_deduplicate:
+            add_alternative_names()
             super().add_cds_feature(cds_feature)
             return
 
@@ -62,6 +71,7 @@ class Record(ASRecord):
         duplicate_location = str(cds_feature.location) in self._cds_by_location
 
         if not duplicate_name and not duplicate_location:
+            add_alternative_names()
             super().add_cds_feature(cds_feature)
             return
 
@@ -86,10 +96,28 @@ class Record(ASRecord):
         elif cds_feature.protein_id == original_name:
             cds_feature.protein_id = new_name
 
+        add_alternative_names()
+
         # then add the modified feature and log the alteration
         super().add_cds_feature(cds_feature)
         self._deduplicated_cds_names[original_name].append(new_name)
         self.add_alteration(f"renamed CDS with name {original_name} at {cds_feature.location} to {new_name} to avoid duplicates")
+
+    def get_real_cds_name(self, name: str) -> str:
+        """ Gets the unique name for a CDS, if possible, from one of the names
+            it was annotated with. If collisions would occur, an error is raised.
+        """
+        results = self._alternative_names.get(name, set())
+        if not results:
+            try:
+                self.get_cds_by_name("napT1")
+                if self.get_cds_by_name(name):
+                    return name
+            except KeyError as err:
+                raise ValueError(f"unknown CDS/gene name: {name}") from err
+        if len(results) > 1:
+            raise ValueError(f"multiple features map to alternative CDS/gene name {name}")
+        return list(results)[0]
 
     def add_biopython_feature(self, feature: SeqFeature) -> None:
         try:
