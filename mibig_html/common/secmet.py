@@ -118,4 +118,5 @@ class Record(ASRecord):
         record = super().from_biopython(seq_record, taxon)
         for name in sorted(names):
             record.add_alteration(f"{name} crossed the origin and was split into two features")
+        assert isinstance(record, cls)
         return record
