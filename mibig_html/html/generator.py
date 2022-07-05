@@ -121,7 +121,8 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
     return js_records, js_domains, js_results
 
 def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[str, ModuleResults]],
-                           options: ConfigType) -> Dict[str, Dict[int, List[HTMLSections]]]:
+                           options: ConfigType, mibig_results: annotations.MibigAnnotations
+                           ) -> Dict[str, Dict[int, List[HTMLSections]]]:
     """ Generates a mapping of record->region->HTMLSections for each record, region and module
 
         Arguments:
@@ -140,18 +141,28 @@ def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[s
         record_details = {}
         record_result = results[record.id]
         for region in record.regions:
-            # work around mibig module not creating protoclusters with the expected types
             assert len(region.subregions) == 1 and region.subregions[0].tool == "mibig"
-            if nrps_pks_domains.domain_drawing.has_domain_details(region.region_feature):
-                region.handlers.append(cast(AntismashModule, nrps_pks_domains))
-
             sections = []
             for handler in region.handlers:
-                if handler is nrps_pks_domains or handler.will_handle(region.products, region.product_categories):
+                if handler.will_handle(region.products, region.product_categories):
                     handler_results = record_result.get(handler.__name__)
                     if handler_results is None:
                         continue
                     sections.append(handler.generate_html(region, handler_results, record, options))
+            # work around mibig module not creating protoclusters with the expected types
+            # by overriding nrps_pks_domains will_handle if required
+            nrps_pks_needed = all([
+                # domains exist
+                nrps_pks_domains.domain_drawing.has_domain_details(region.region_feature),
+                # the correct types are present
+                set(mibig_results.data.cluster.biosynthetic_class).intersection({"NRP", "Polyketide"}),
+                # but avoid duplication
+                not nrps_pks_domains.will_handle(region.products, region.product_categories),
+            ])
+            if nrps_pks_needed:
+                result = record_result[nrps_pks_domains.__name__]
+                section = nrps_pks_domains.generate_html(region, result, record, options)
+                sections.append(section)
             record_details[region.get_region_number()] = sections
         details[record.id] = record_details
     return details
@@ -188,7 +199,10 @@ def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResult
         annotation_filename = "{}.json".format(mibig_id)
         page_title = mibig_id
 
-        html_sections = generate_html_sections(record_layers_with_regions, results_by_record_id, options)
+        mibig_results = results[0][annotations.__name__]
+        assert isinstance(mibig_results, annotations.MibigAnnotations)
+
+        html_sections = generate_html_sections(record_layers_with_regions, results_by_record_id, options, mibig_results)
 
         svg_tooltip = ("Shows the layout of the region, marking coding sequences and areas of interest. "
                        "Clicking a gene will select it and show any relevant details. "
@@ -198,8 +212,6 @@ def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResult
                        )
         record_layer = record_layers_with_regions[0]
         region = record_layer.regions[0]
-        mibig_results = results[0][annotations.__name__]
-        assert isinstance(mibig_results, annotations.MibigAnnotations)
         aux = template.render(records=record_layers_with_regions, options=options_layer,
                               version=options.version, extra_data=js_domains,
                               regions_written=regions_written, sections=html_sections,
