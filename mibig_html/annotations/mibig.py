@@ -202,7 +202,7 @@ class PubmedEntry:
 
 
 class PubmedCache:
-    def __init__(self, cache_file):
+    def __init__(self, cache_file: str) -> None:
         self.mappings: Dict[str, PubmedEntry] = {}
         if cache_file and os.path.exists(cache_file):
             with open(cache_file, 'r') as handle:
