@@ -3,7 +3,7 @@
 
 """ Overrides some antiSMASH HTML rendering functions """
 
-from typing import Any
+from typing import Any, List
 
 from antismash.common.html_renderer import (
     collapser_start,
@@ -12,6 +12,7 @@ from antismash.common.html_renderer import (
     Markup,
     switch,
 )
+from antismash.common.secmet import Record
 
 _TOOLTIP_COUNTER = 0
 
@@ -35,6 +36,21 @@ def help_tooltip(text: str, name: str, inline: bool = False) -> Markup:
                    '</div>').format(unique_id, text, "-inline" if inline else ""))
 
 
+def clickable_gene(name: str, record: Record, force_current: bool = False) -> Markup:
+    real_name = record.get_real_cds_name(name)
+    if force_current:
+        gene_name = name
+    else:
+        cds = record.get_cds_by_name(real_name)
+        gene_name = cds.gene or real_name
+    return Markup(f'<span class="jsdomain-orflabel" data-locus="{real_name}" style="font-size:100%">{gene_name}</span>')
+
+
+def clickable_gene_list(names: List[str], record: Record,
+                        force_current: bool = False, separator: str = " ") -> Markup:
+    return Markup(separator.join(clickable_gene(name, record, force_current=force_current) for name in names))
+
+
 class FileTemplate(_FileTemplate):  # pylint: disable=too-few-public-methods
     """ A template renderer for file templates """
     def render(self, **kwargs: Any) -> Markup:
@@ -47,6 +63,8 @@ class FileTemplate(_FileTemplate):  # pylint: disable=too-few-public-methods
             "collapser_end": collapser_end,
             "help_tooltip": help_tooltip,
             "switch": switch,
+            "clickable_gene": clickable_gene,
+            "clickable_gene_list": clickable_gene_list,
         }
         defaults.update(kwargs)
         return Markup(self.template.render(**defaults))
