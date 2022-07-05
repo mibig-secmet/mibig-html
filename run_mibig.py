@@ -33,7 +33,7 @@ def write_log(text: str, file_path: str) -> None:
 
 
 def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
-          log_file_path: str, mibig_version: str, mibig_only: bool) -> int:
+          log_file_path: str, mibig_version: str, mibig_only: bool, pubmed_cache: str) -> int:
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -63,6 +63,7 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
         "--allow-long-headers",
         "--mibig-json", json_path,
         "--mibig-cache-json", cache_path,
+        "--mibig-pubmed-json", pubmed_cache,
         "--output-dir", output_path,
         "--output-basename", f"{mibig_acc}.1",
     ]
@@ -185,10 +186,12 @@ if __name__ == "__main__":
                         help="The version of mibig to display in results")
     parser.add_argument("-c", "--cache", type=str, default="tax_cache.json",
                         help="The cache file containing the mibig-taxa cache")
+    parser.add_argument("-p", "--pubmed-cache", type=str, default="pubmed_cache.json",
+                        help="The cache file containing the pubmed cache")
     parser.add_argument("-m", "--mibig-only", action="store_true",
                         help="Only run the MIBiG generation, skip full antiSMASH run")
     args = parser.parse_args()
-    if _main(args.json, args.genbanks, args.cache, args.output, args.logfile, args.mibig_version, args.mibig_only):
+    if _main(args.json, args.genbanks, args.cache, args.output, args.logfile, args.mibig_version, args.mibig_only, args.pubmed_cache):
         print("Errors were encountered, see log file for details")
         sys.exit(1)
     sys.exit(0)

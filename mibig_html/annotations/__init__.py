@@ -37,6 +37,12 @@ def get_arguments() -> ModuleArgs:
                     type=str,
                     default="",
                     help=("Sideload cache JSON for MIBiG taxon annotations."))
+    args.add_option("mibig-pubmed-json",
+                    dest="mibig_pubmed_json",
+                    metavar="JSON",
+                    type=str,
+                    default="",
+                    help=("Sideload cache JSON for pubmed annotations."))
     return args
 
 
@@ -59,7 +65,7 @@ def is_enabled(options: ConfigType) -> bool:
 def regenerate_previous_results(results: Dict[str, Any], record: Record,
                                 options: ConfigType) -> Optional[MibigAnnotations]:
     """ Regenerate previous results. """
-    return MibigAnnotations.from_json(results, record, options.mibig_json, options.mibig_cache_json)
+    return MibigAnnotations.from_json(results, record, options.mibig_json, options.mibig_cache_json, options.mibig_pubmed_json)
 
 
 def run_on_record(record: Record, previous_results: Optional[MibigAnnotations],
@@ -68,7 +74,7 @@ def run_on_record(record: Record, previous_results: Optional[MibigAnnotations],
     """
     if previous_results:
         return previous_results
-    return mibig_loader(options.mibig_json, options.mibig_cache_json, record)
+    return mibig_loader(options.mibig_json, options.mibig_cache_json, options.mibig_pubmed_json, record)
 
 
 def prepare_data(_logging_only: bool = False) -> List[str]:

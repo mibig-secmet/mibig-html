@@ -17,7 +17,7 @@ from mibig.converters.read.cluster import Publication
 from mibig_html.common.html_renderer import FileTemplate
 from mibig_html.common.layers import OptionsLayer
 
-from .mibig import MibigAnnotations
+from .mibig import MibigAnnotations, PubmedCache
 
 
 def will_handle(_products: List[str], _categores: Set[str]) -> bool:
@@ -49,7 +49,7 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
 
     html = HTMLSections("mibig-general")
     taxonomy_text = f"{tax.superkingdom} > {tax.kingdom} > {tax.phylum} > {tax_class} > {tax.order} > {tax.family} > {tax.name}"
-    publications_links = ReferenceCollection(data.cluster.publications)
+    publications_links = ReferenceCollection(data.cluster.publications, results.pubmed_cache)
 
     general = render_template("general.html", data=results.data, taxonomy_text=taxonomy_text,
                               publications_links=publications_links.get_links())
@@ -173,12 +173,14 @@ class ReferenceCollection:
 
     __slots__ = (
         'client',
+        'pubmed_cache',
         'references',
     )
 
-    def __init__(self, publications: List[Publication]) -> None:
+    def __init__(self, publications: List[Publication], pubmed_cache: PubmedCache) -> None:
         self.client = Client(api_key=os.environ.get("NCBI_API_KEY", None))
         self.references = {}
+        self.pubmed_cache = pubmed_cache
         pmids = []
 
         for publication in publications:
@@ -205,8 +207,16 @@ class ReferenceCollection:
     def _resolve_pmids(self, pmids: List[str]) -> None:
         if not pmids:
             return
-        articles = self.client.efetch(db="pubmed", id=pmids)
-        for article in articles:
-            self.references[article.pmid].title = article.title
-            self.references[article.pmid].info = "{a.authors[0]} et al., {a.jrnl} ({a.year}) PMID:{a.pmid}".format(
-                a=article)
+
+        missing = self.pubmed_cache.get_missing(pmids)
+
+        if missing:
+            articles = self.client.efetch(db="pubmed", id=missing)
+            for article in articles:
+                self.pubmed_cache.add(article.title, article.authors,
+                                      article.year, article.jrnl, article.pmid)
+
+        for pmid in pmids:
+            entry = self.pubmed_cache.get(pmid)
+            self.references[pmid].title = entry.title
+            self.references[pmid].info = entry.info
