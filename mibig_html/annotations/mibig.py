@@ -10,7 +10,7 @@ import logging
 
 from antismash.common.errors import AntismashInputError
 from antismash.common.module_results import DetectionResults
-from antismash.common.secmet import CDSFeature, SubRegion, Record
+from antismash.common.secmet import CDSFeature, SubRegion
 from antismash.common.secmet.locations import (
     CompoundLocation,
     FeatureLocation,
@@ -19,6 +19,8 @@ from antismash.common.secmet.locations import (
 
 from mibig.converters.read.top import Everything
 from mibig_taxa import TaxonCache  # pylint: disable=no-name-in-module
+
+from mibig_html.common.secmet import Record
 
 
 class MibigAnnotations(DetectionResults):
