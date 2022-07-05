@@ -191,7 +191,7 @@ class PubmedEntry:
     def info(self) -> str:
         return f"{self.authors[0]} et al., {self.journal} ({self.year}) PMID:{self.pmid}"
 
-    def to_json(self):
+    def to_json(self) -> Dict[str, Any]:
         return {
             "title": self.title,
             "authors": self.authors,
