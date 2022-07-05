@@ -740,6 +740,7 @@ table.region-table {
     @extend .serif;
     font-size: 75%;
     fill: #444;
+    cursor: pointer;
 }
 .jsdomain-tooltip {
     @extend .tooltip;
