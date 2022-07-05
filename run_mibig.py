@@ -49,10 +49,21 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
     # load/populate cache in advance, because it is needed to fetch taxonomy information
     cache = TaxonCache(cache_path)
     try:
-        taxon = cache.get_antismash_taxon(int(data.cluster.ncbi_tax_id))
+        tax_id = int(data.cluster.ncbi_tax_id)
+        taxon = cache.get_antismash_taxon(tax_id)
     except ValueError as err:
-        write_log(f"Unrecongnisable taxon {mibig_acc}: {err}", log_file_path)
+        try:
+            entry = cache.get(tax_id, True)
+            write_log(
+                f"Outdated taxon {mibig_acc}: {tax_id} is now {entry.tax_id} ({err})", log_file_path)
+        except ValueError as err:
+            write_log(f"Unrecongnisable taxon {mibig_acc}: {err}", log_file_path)
         return 1
+
+    # TODO: Properly support running on plants for MIBiG
+    orig_taxon = taxon
+    if taxon == "plants":
+        taxon = "fungi"
 
     args = [
         "-v",
@@ -100,7 +111,7 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
             return 1
     write_log("Successfully generated MIBiG page for {}".format(mibig_acc), log_file_path)
 
-    if mibig_only:
+    if mibig_only or orig_taxon == "plants":
         return 0
 
     print("Generating antiSMASH output for {}".format(mibig_acc))
