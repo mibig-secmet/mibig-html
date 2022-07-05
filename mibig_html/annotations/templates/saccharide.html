@@ -21,7 +21,7 @@
                     <td>
                         <ul>
                             {% for sc in sac.sugar_subclusters %}
-                                <li>{{", ".join(sc)}}</li>
+                                <li>{{clickable_gene_list(sc, record, separator=", ")}}</li>
                             {% endfor %}
                         </ul>
                     </td>
@@ -37,7 +37,7 @@
                     <td>
                         <div style="margin-bottom: 1em;">
                             <strong>
-                                >{{gt.gene_id or "?"}}
+                                {{clickable_gene(gt.gene_id, record)}}
                             </strong><br />
                             {% if gt.specificity_pretty %}
                             Specificity: {{gt.specificity_pretty}}<br />

@@ -79,19 +79,19 @@
                     <tr>
                         {% if loop.index == 1 %}
                         <td rowspan="{{(pks.modules or [None])|length}}" style="text-align:center; vertical-align: middle;">
-                            {{"<br />+<br />".join(pks.genes)|safe}}
+                            {{clickable_gene_list(pks.genes, record, separator="<br />+<br />")}}
                         </td>
                         <td rowspan="{{(pks.modules or [None])|length}}" style="text-align:left; vertical-align: text-top;">
                             <strong>Synthase subclass:</strong> {{"/".join(pks.subclass)}}<br />
                             {% if pks.trans_at %}
-                            <strong>Trans-acyltansferases:</strong> {{", ".join(pks.trans_at.genes)}}<br />
+                            <strong>Trans-acyltansferases:</strong> {{clickable_gene_list(pks.trans_at.genes, record, separator=", ")}}<br />
                             {% endif %}
                             {% if pks.thioesterases %}
                             <strong>Thioesterases:</strong><br />
                             <ul style="padding: 0; padding-left: 1em; margin: 0;">
                                 {% for te in pks.thioesterases %}
                                 <li>
-                                    {{te.gene}} ({{te.thioesterase_type}})
+                                    {{clickable_gene(te.gene, record)}} ({{te.thioesterase_type}})
                                 </li>
                                 {% endfor %}
                             </ul>
@@ -101,7 +101,7 @@
                             {% endif %}
                             {% if pks.iterative %}
                             {% if pks.iterative.genes %}
-                            <strong>Iterative PKS genes:</strong> {{", ".join(pks.iterative.genes)}}<br />
+                            <strong>Iterative PKS genes:</strong> {{clickable_gene_list(pks.iterative.genes, record, separator=", ")}}<br />
                             {% endif %}
                             <strong>Iterative PKS type:</strong> {{pks.iterative.subtype}}, {{pks.iterative.cyclization_type}}<br />
                             <strong>Iteration counts:</strong> {{pks.iterative.nr_iterations}}<br />
@@ -136,7 +136,7 @@
                                 {% endif %}
                                 {% endif %}
                                 {% if module.genes %}
-                                Genes: {{", ".join(module.genes)}}<br />
+                                Genes: {{clickable_gene_list(module.genes, record, separator=", ")}}<br />
                                 {% endif %}
                                 {% if module.domains %}
                                 Core domains: {{", ".join(module.domains)}}<br />

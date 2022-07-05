@@ -60,7 +60,7 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
 
     genes = []
     annots = data.cluster.genes.annotations if data.cluster.genes else []
-    for cds_feature in record_layer.get_cds_features_within_location(region_layer.location):
+    for cds_feature in region_layer.cds_children:
         gene = {
             "locus_tag": cds_feature.locus_tag,
             "protein_id": cds_feature.protein_id,
@@ -121,27 +121,27 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
             gene["functions"].append(function_text)
             gene["evidences"] = sorted(set(function.evidence))
         genes.append(gene)
-    html.add_detail_section("Genes", render_template("genes.html", genes=genes),
+    html.add_detail_section("Genes", render_template("genes.html", genes=genes, record=record_layer),
                             class_name="mibig-genes")
 
     if data.cluster.polyketide:
-        html.add_detail_section("Polyketide", render_template("polyketide.html", pk=results.data.cluster.polyketide),
+        html.add_detail_section("Polyketide", render_template("polyketide.html", pk=results.data.cluster.polyketide, record=record_layer),
                                 class_name="mibig-polyketide")
 
     if data.cluster.nrp:
-        html.add_detail_section("NRP", render_template("nrp.html", nrp=results.data.cluster.nrp),
+        html.add_detail_section("NRP", render_template("nrp.html", nrp=results.data.cluster.nrp, record=record_layer),
                                 class_name="mibig-nrp")
 
     if data.cluster.ripp:
-        html.add_detail_section("RiPP", render_template("ripp.html", ripp=results.data.cluster.ripp),
+        html.add_detail_section("RiPP", render_template("ripp.html", ripp=results.data.cluster.ripp, record=record_layer),
                                 class_name="mibig-ripp")
 
     if data.cluster.saccharide:
-        html.add_detail_section("Saccharide", render_template("saccharide.html", sac=results.data.cluster.saccharide),
+        html.add_detail_section("Saccharide", render_template("saccharide.html", sac=results.data.cluster.saccharide, record=record_layer),
                                 class_name="mibig-saccharide")
 
     if data.cluster.terpene:
-        html.add_detail_section("Terpene", render_template("terpene.html", trp=results.data.cluster.terpene),
+        html.add_detail_section("Terpene", render_template("terpene.html", trp=results.data.cluster.terpene, record=record_layer),
                                 class_name="mibig-terpene")
 
     logs = sorted(results.data.changelog, key=lambda log: log.mibig_version)

@@ -37,7 +37,7 @@
                         <strong>Prenyltransferases</strong>
                     </td>
                     <td>
-                        {{", ".join(trp.prenyltransferases)}}
+                       {{clickable_gene_list(trp.prenyltransferases, record, separator=", ")}}
                     </td>
                 </tr>
                 {% endif %}
@@ -47,7 +47,7 @@
                         <strong>Terpene synthases/cyclases</strong>
                     </td>
                     <td>
-                        {{", ".join(trp.synth_cycl)}}
+                       {{clickable_gene_list(trp.synth_cycl, record, separator=", ")}}
                     </td>
                 </tr>
                 {% endif %}

@@ -56,7 +56,7 @@
                         <ul style="padding: 0; margin: 0; list-style: none;">
                             {% for te in nrp.thioesterases %}
                             <li>
-                                {{te.gene}} ({{te.thioesterase_type}})
+                                {{clickable_gene(te.gene, record)}} ({{te.thioesterase_type}})
                             </li>
                             {% endfor %}
                         </ul>
@@ -82,8 +82,10 @@
                 {% for nrps in nrp.nrps_genes %}
                     {% for module in nrps.modules %}
                     <tr>
-                        {% if loop.index == 1 %}
-                        <td rowspan="{{nrps.modules|length}}" style="text-align:center; vertical-align: middle;">{{nrps.gene_id}}</td>
+                        {% if loop.first %}
+                        <td rowspan="{{nrps.modules|length}}" style="text-align:center; vertical-align: middle;">
+                          {{clickable_gene(nrps.gene_id, record)}}
+                        </td>
                         {% endif %}
                         <td style="min-width: 20em; text-align:left;">
                         {% if module != None %}
@@ -108,7 +110,7 @@
                                     {% endfor %}
                                 </ul>
                                 {% if module.specificity.subcluster %}
-                                Genes encoding specified AA: {{", ".join(module.specificity.subcluster)}}<br />
+                                Genes encoding specified AA: {{clickable_gene_list(module.specificity.subcluster, record, separator=", ")}}<br />
                                 {% endif %}
                                 {% endif %}
                                 {% if module.condensation_type %}

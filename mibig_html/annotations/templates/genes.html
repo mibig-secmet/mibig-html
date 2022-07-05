@@ -21,17 +21,13 @@
                             <td>
                                 <ul style="padding:0; margin:0; list-style: none;">
                                     {% for key in ["locus_tag", "protein_id", "gene"] %}
-                                        {% if gene.get(key, None) not in [None, "None", "n/a"] %}
-                                            <li>{{gene[key]}}</li>
+                                        {% if gene.get(key) %}
+                                            <li>{{clickable_gene(gene[key], record, force_current=True)}}</li>
                                         {% endif %}
                                     {% endfor %}
                                 </ul>
                             </td>
-                            {% if "start" in gene %}
                             <td>{{gene["start"]}} - {{gene["end"]}} ({{gene["strand"]}})</td>
-                            {% else %}
-                            <td>(external)</td>
-                            {% endif %}
                             <td>{{gene["product"]}}</td>
                             <td>
                                 <ul style="padding:0; margin:0; list-style: none;">

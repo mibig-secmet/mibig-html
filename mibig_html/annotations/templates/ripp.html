@@ -28,11 +28,7 @@
                     </td>
                     <td>
                         <ul style="padding: 0; margin: 0; list-style: none;">
-                            {% for pep in ripp.peptidases %}
-                            <li>
-                                {{pep}}
-                            </li>
-                            {% endfor %}
+                           {{clickable_gene_list(ripp.peptidases, record)}}
                         </ul>
                     </td>
                 </tr>
@@ -47,7 +43,7 @@
                     <td>
                         <div style="margin-bottom: 1em;">
                             <strong>
-                                >{{precursor.gene_id}}
+                                {{clickable_gene(precursor.gene_id, record)}}
                             </strong><br />
                             {% if precursor.leader_sequence %}
                             Leader sequence: {{precursor.leader_sequence}}<br />
