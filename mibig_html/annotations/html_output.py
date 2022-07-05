@@ -20,7 +20,7 @@ from mibig_html.common.layers import OptionsLayer
 from .mibig import MibigAnnotations, PubmedCache
 
 
-def will_handle(_products: List[str], _categores: Set[str]) -> bool:
+def will_handle(_products: List[str], _categories: Set[str]) -> bool:
     """ Returns true if one or more relevant products are present """
     return True
 
