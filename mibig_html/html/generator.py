@@ -223,9 +223,10 @@ def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResult
         result_file.write(aux)
 
 
-def update_cds_description(record: Record, js_record: Dict[str, Any], annotations: List[GeneAnnotation]) -> None:
+def update_cds_description(record: Record, js_record: Dict[str, Any],
+                           cds_annotations: List[GeneAnnotation]) -> None:
     id_to_annotations = {}
-    for annotation in annotations:
+    for annotation in cds_annotations:
         if annotation.id:
             assert annotation.id not in id_to_annotations, annotation.id
             id_to_annotations[annotation.id] = annotation
