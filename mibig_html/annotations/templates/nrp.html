@@ -92,7 +92,7 @@
                             <div style="margin-bottom: 1em;">
                                 <strong>
                                     Module {{module.module_number or "?"}}
-                                    {% if not module.active %}
+                                    {% if module.active is false %}
                                     [inactive]
                                     {% endif %}
                                     {% if module.comments %}
