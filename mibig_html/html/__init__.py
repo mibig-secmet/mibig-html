@@ -79,8 +79,9 @@ def write(records: List[Record], results: List[Dict[str, ModuleResults]],
     copy_template_dir('js', output_dir)
     copy_template_dir('images', output_dir)
 
-    # Generate structure images for records obtained from BioSQL
-    generate_webpage(records, results, options, all_modules)
+    assert len(records) == 1
+    assert len(results) == 1
+    generate_webpage(records[0], results[0], options, all_modules)
 
 
 def copy_template_dir(template: str, output_dir: str, pattern: Optional[str] = None) -> None:

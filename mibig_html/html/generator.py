@@ -6,7 +6,7 @@
 import string
 import os
 import re
-from typing import Any, Dict, List, Tuple, Union, cast
+from typing import Any, Dict, List, Set, Tuple, Union, cast
 
 from mibig.converters.read.cluster import GeneAnnotation
 
@@ -17,7 +17,7 @@ from antismash.common.layers import RecordLayer, RegionLayer
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
 from antismash.custom_typing import AntismashModule
-from antismash.detection import hmm_detection, nrps_pks_domains
+from antismash.detection import hmm_detection
 from antismash.config import ConfigType
 from antismash.outputs.html import js
 from antismash.outputs.html.generator import (
@@ -55,7 +55,8 @@ def convert_categories(categories: List[str]) -> List[str]:
 
 
 def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults]],
-                    options: ConfigType, all_modules: List[AntismashModule]) -> Tuple[
+                    options: ConfigType, all_modules: List[AntismashModule],
+                    categories: Set[str]) -> Tuple[
                         List[Dict[str, Any]],
                         List[Dict[str, Union[str, List[JSONOrf]]]],
                         Dict[str, Dict[str, Dict[str, Any]]]
@@ -67,6 +68,7 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
             records: a list of Records to convert
             results: a dictionary mapping record id to a list of ModuleResults to convert
             options: antiSMASH options
+            categories: a list of antiSMASH compatible category strings
 
         Returns:
             a tuple of
@@ -93,7 +95,7 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
 
         json_record['seq_id'] = "".join(char for char in json_record['seq_id'] if char in string.printable)
         for region, json_region in zip(record.get_regions(), json_record['regions']):
-            json_region["product_categories"] = convert_categories(mibig_results.data.cluster.biosynthetic_class)
+            json_region["product_categories"] = sorted(categories)
             handlers = find_plugins_for_cluster(all_modules, json_region)
             region_results = {}
             for handler in handlers:
@@ -120,9 +122,10 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
 
     return js_records, js_domains, js_results
 
-def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[str, ModuleResults]],
-                           options: ConfigType, mibig_results: annotations.MibigAnnotations
-                           ) -> Dict[str, Dict[int, List[HTMLSections]]]:
+
+def generate_html_sections(record: RecordLayer, results: Dict[str, ModuleResults],
+                           options: ConfigType, modules: List[AntismashModule],
+                           categories: Set[str]) -> List[HTMLSections]:
     """ Generates a mapping of record->region->HTMLSections for each record, region and module
 
         Arguments:
@@ -130,96 +133,65 @@ def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[s
             results: a dictionary mapping record name to
                         a dictionary mapping each module name to its results object
             options: the current antiSMASH config
+            modules: modules that may have results for the BGC
+            categories: a set of antiSMASH-compatible product categories
 
         Returns:
-            a dictionary mapping record id to
-                a dictionary mapping region number to
-                    a list of HTMLSections, one for each module
+            a list of HTMLSections, one for each relevant module
     """
-    details = {}
-    for record in records:
-        record_details = {}
-        record_result = results[record.id]
-        for region in record.regions:
-            assert len(region.subregions) == 1 and region.subregions[0].tool == "mibig"
-            sections = []
-            for handler in region.handlers:
-                if handler.will_handle(region.products, region.product_categories):
-                    handler_results = record_result.get(handler.__name__)
-                    if handler_results is None:
-                        continue
-                    sections.append(handler.generate_html(region, handler_results, record, options))
-            # work around mibig module not creating protoclusters with the expected types
-            # by overriding nrps_pks_domains will_handle if required
-            nrps_pks_needed = all([
-                # domains exist
-                nrps_pks_domains.domain_drawing.has_domain_details(region.region_feature),
-                # the correct types are present
-                set(mibig_results.data.cluster.biosynthetic_class).intersection({"NRP", "Polyketide"}),
-                # but avoid duplication
-                not nrps_pks_domains.will_handle(region.products, region.product_categories),
-            ])
-            if nrps_pks_needed:
-                result = record_result[nrps_pks_domains.__name__]
-                section = nrps_pks_domains.generate_html(region, result, record, options)
-                sections.append(section)
-            record_details[region.get_region_number()] = sections
-        details[record.id] = record_details
-    return details
+    assert len(record.regions) == 1
+    region = record.regions[0]
+    sections = []
+    # don't use the region/record layer handlers for generating sections,
+    # as they don't use the converted categories for checking
+    for module in modules:
+        if module.__name__ not in results:
+            continue
+        if hasattr(module, "will_handle") and module.will_handle([], categories):
+            sections.append(module.generate_html(region, results[module.__name__], record, options))
+    return sections
 
 
-def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResults]],
+def generate_webpage(record: Record, result: Dict[str, ModuleResults],
                      options: ConfigType, all_modules: List[AntismashModule]) -> None:
     """ Generates and writes the HTML itself """
-    # bring mibig module to the front of the module list
-    all_modules = [cast(AntismashModule, annotations)] + [module for module in all_modules if module is not annotations]
+    mibig_results = result[annotations.__name__]
+    assert isinstance(mibig_results, annotations.MibigAnnotations)
+    categories = set(convert_categories(mibig_results.data.cluster.biosynthetic_class))
 
-    generate_searchgtr_htmls(records, options)
-    json_records, js_domains, js_results = build_json_data(records, results, options, all_modules)
+    # bring mibig module to the front of the module list
+    all_modules.pop(all_modules.index(annotations))
+    all_modules.insert(0, cast(AntismashModule, annotations))
+
+    generate_searchgtr_htmls([record], options)
+    json_records, js_domains, js_results = build_json_data([record], [result], options, all_modules, categories)
     write_regions_js(json_records, options.output_dir, js_domains, js_results)
 
-    with open(os.path.join(options.output_dir, 'index.html'), 'w') as result_file:
-        template = FileTemplate(path.get_full_path(__file__, "templates", "overview.html"))
+    template = FileTemplate(path.get_full_path(__file__, "templates", "overview.html"))
 
-        options_layer = OptionsLayer(options, all_modules)
-        record_layers_with_regions = []
-        record_layers_without_regions = []
-        results_by_record_id: Dict[str, Dict[str, ModuleResults]] = {}
-        for record, record_results in zip(records, results):
-            if record.get_regions():
-                record_layers_with_regions.append(RecordLayer(record, None, options_layer))
-            else:
-                record_layers_without_regions.append(RecordLayer(record, None, options_layer))
-            results_by_record_id[record.id] = record_results
+    options_layer = OptionsLayer(options, all_modules)
+    record_layer = RecordLayer(record, None, options_layer)
 
-        regions_written = sum(len(record.get_regions()) for record in records)
-        job_id = os.path.basename(options.output_dir)
+    mibig_id = os.path.splitext(os.path.basename(options.mibig_json))[0]
+    annotation_filename = "{}.json".format(mibig_id)
 
-        mibig_id = os.path.splitext(os.path.basename(options.mibig_json))[0]
-        annotation_filename = "{}.json".format(mibig_id)
-        page_title = mibig_id
+    sections = generate_html_sections(record_layer, result, options, all_modules, categories)
 
-        mibig_results = results[0][annotations.__name__]
-        assert isinstance(mibig_results, annotations.MibigAnnotations)
-
-        html_sections = generate_html_sections(record_layers_with_regions, results_by_record_id, options, mibig_results)
-
-        svg_tooltip = ("Shows the layout of the region, marking coding sequences and areas of interest. "
-                       "Clicking a gene will select it and show any relevant details. "
-                       "Clicking an area feature (e.g. a candidate cluster) will select all coding "
-                       "sequences within that area. Double clicking an area feature will zoom to that area. "
-                       "Multiple genes and area features can be selected by clicking them while holding the Ctrl key."
-                       )
-        record_layer = record_layers_with_regions[0]
-        region = record_layer.regions[0]
-        aux = template.render(records=record_layers_with_regions, options=options_layer,
-                              version=options.version, extra_data=js_domains,
-                              regions_written=regions_written, sections=html_sections,
-                              config=options, job_id=job_id, page_title=page_title,
-                              records_without_regions=record_layers_without_regions,
-                              svg_tooltip=svg_tooltip,
-                              record=record_layer, region=region, cluster=mibig_results.data.cluster,
-                              annotation_filename=annotation_filename, mibig_id=mibig_id)
+    svg_tooltip = ("Shows the layout of the region, marking coding sequences and areas of interest. "
+                   "Clicking a gene will select it and show any relevant details. "
+                   "Clicking an area feature (e.g. a candidate cluster) will select all coding "
+                   "sequences within that area. Double clicking an area feature will zoom to that area. "
+                   "Multiple genes and area features can be selected by clicking them while holding the Ctrl key."
+                   )
+    region = record_layer.regions[0]
+    aux = template.render(records=[record_layer], options=options_layer,
+                          version=options.version, extra_data=js_domains,
+                          regions_written=1, sections={record.id: {1: sections}},
+                          config=options, page_title=mibig_id,
+                          svg_tooltip=svg_tooltip,
+                          record=record_layer, region=region, cluster=mibig_results.data.cluster,
+                          annotation_filename=annotation_filename, mibig_id=mibig_id)
+    with open(os.path.join(options.output_dir, 'index.html'), 'w', encoding="utf_8") as result_file:
         result_file.write(aux)
 
 

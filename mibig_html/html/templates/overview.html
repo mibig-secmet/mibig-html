@@ -6,7 +6,7 @@
   <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico">
   <link rel="stylesheet" type="text/css" href="css/mibig.css">
 </head>
-{% set multi_record = records | length + records_without_regions | length > 1 %}
+{% set multi_record = False %}
 <body>
   <div id="header">
     {% include 'header.html' %}
