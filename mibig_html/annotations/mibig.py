@@ -5,7 +5,7 @@
 
 import json
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 import logging
 
 from antismash.common.errors import AntismashInputError
@@ -209,15 +209,18 @@ class PubmedEntry:
 class PubmedCache:
     def __init__(self, cache_file: str) -> None:
         self.mappings: Dict[str, PubmedEntry] = {}
+        self.cache_file = cache_file
         if cache_file and os.path.exists(cache_file):
             with open(cache_file, 'r') as handle:
                 entries = json.load(handle)
             for entry_id, entry_values in entries.items():
                 self.mappings[entry_id] = PubmedEntry(
                     entry_values["title"], entry_values["authors"], entry_values["year"], entry_values["journal"], entry_values["pmid"])
+        self._new_updates: Set[str] = set()
 
     def add(self, title: str, authors: List[str], year: str, journal: str, pmid: str) -> None:
         self.mappings[pmid] = PubmedEntry(title, authors, year, journal, pmid)
+        self._new_updates.add(pmid)
 
     def get(self, pmid: str) -> PubmedEntry:
         return self.mappings[pmid]
@@ -225,3 +228,11 @@ class PubmedCache:
     def get_missing(self, want: List[str]) -> List[str]:
         have = self.mappings.keys()
         return sorted(list(want - have))
+
+    def __del__(self) -> None:
+        if not self._new_updates:
+            return
+        logging.debug("Updating PubMed cache file with %d new entries: %s",
+                      len(self._new_updates), self.cache_file)
+        with open(self.cache_file, "w", encoding="utf_8") as handle:
+            json.dump({key: val.to_json() for key, val in self.mappings.items()}, handle)
