@@ -178,7 +178,7 @@ class ReferenceCollection:
     )
 
     def __init__(self, publications: List[Publication], pubmed_cache: PubmedCache) -> None:
-        self.client = Client(api_key=os.environ.get("NCBI_API_KEY", None))
+        self.client: Client = None
         self.references = {}
         self.pubmed_cache = pubmed_cache
         pmids = []
@@ -211,6 +211,8 @@ class ReferenceCollection:
         missing = self.pubmed_cache.get_missing(pmids)
 
         if missing:
+            if self.client is None:
+                self.client = Client(api_key=os.environ.get("NCBI_API_KEY", None))
             articles = self.client.efetch(db="pubmed", id=missing)
             for article in articles:
                 self.pubmed_cache.add(article.title, article.authors,
