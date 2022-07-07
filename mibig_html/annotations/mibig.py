@@ -4,8 +4,7 @@
 """ MiBIG specific sideloading """
 
 import json
-import os
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 import logging
 
 from antismash.common.errors import AntismashInputError
@@ -22,9 +21,12 @@ from mibig_taxa import TaxonCache  # pylint: disable=no-name-in-module
 
 from mibig_html.common.secmet import Record
 
+from .references import PubmedCache
+
 
 class MibigAnnotations(DetectionResults):
-    def __init__(self, record_id: str, area: SubRegion, data: Everything, cache_file: str, pubmed_cache_file: str) -> None:
+    def __init__(self, record_id: str, area: SubRegion, data: Everything, cache_file: str,
+                 pubmed_cache_file: str, doi_cache_file: str) -> None:
         super().__init__(record_id)
         self.data = data  # holds the original annotation json data
         # save calculated loci (relative to record), not annotated ones
@@ -58,7 +60,7 @@ class MibigAnnotations(DetectionResults):
 
     @staticmethod
     def from_json(prev: Dict[str, Any], record: Record, annotations_file: str,
-                  cache_file: str, pubmed_cache_file: str) -> Optional["MibigAnnotations"]:
+                  cache_file: str, pubmed_cache_file: str, doi_cache_file: str) -> Optional["MibigAnnotations"]:
         with open(annotations_file) as handle:
             raw = json.load(handle)
             data = Everything(raw)
@@ -92,14 +94,15 @@ class MibigAnnotations(DetectionResults):
                 loci.end or len(record.seq)
             )
             area = SubRegion(loci_region, tool="mibig", label=product)
-            return MibigAnnotations(record.id, area, data, cache_file, pubmed_cache_file)
+            return MibigAnnotations(record.id, area, data, cache_file, pubmed_cache_file, doi_cache_file)
         else:
             logging.error("Can't reuse MIBiG annotation.")
             raise AntismashInputError(
                 "Genbank record or gene annotations are updated, can't reuse result")
 
 
-def mibig_loader(annotations_file: str, cache_file: str, pubmed_cache_file: str, record: Record) -> MibigAnnotations:
+def mibig_loader(annotations_file: str, cache_file: str, pubmed_cache_file: str,
+                 doi_cache_file: str, record: Record) -> MibigAnnotations:
     """This method will be called only when not reusing data"""
     with open(annotations_file) as handle:
         raw = json.load(handle)
@@ -181,58 +184,4 @@ def mibig_loader(annotations_file: str, cache_file: str, pubmed_cache_file: str,
         raise ValueError(
             f"{data.cluster.mibig_accession} refers to missing genes: {', '.join(sorted(missing))}")
 
-    return MibigAnnotations(record.id, area, data, cache_file, pubmed_cache_file)
-
-
-class PubmedEntry:
-    def __init__(self, title: str, authors: List[str], year: str, journal: str, pmid: str) -> None:
-        self.title = title
-        self.authors = authors
-        self.year = year
-        self.journal = journal
-        self.pmid = pmid
-
-    @property
-    def info(self) -> str:
-        return f"{self.authors[0]} et al., {self.journal} ({self.year}) PMID:{self.pmid}"
-
-    def to_json(self) -> Dict[str, Any]:
-        return {
-            "title": self.title,
-            "authors": self.authors,
-            "year": self.year,
-            "journal": self.journal,
-            "pmid": self.pmid,
-        }
-
-
-class PubmedCache:
-    def __init__(self, cache_file: str) -> None:
-        self.mappings: Dict[str, PubmedEntry] = {}
-        self.cache_file = cache_file
-        if cache_file and os.path.exists(cache_file):
-            with open(cache_file, 'r') as handle:
-                entries = json.load(handle)
-            for entry_id, entry_values in entries.items():
-                self.mappings[entry_id] = PubmedEntry(
-                    entry_values["title"], entry_values["authors"], entry_values["year"], entry_values["journal"], entry_values["pmid"])
-        self._new_updates: Set[str] = set()
-
-    def add(self, title: str, authors: List[str], year: str, journal: str, pmid: str) -> None:
-        self.mappings[pmid] = PubmedEntry(title, authors, year, journal, pmid)
-        self._new_updates.add(pmid)
-
-    def get(self, pmid: str) -> PubmedEntry:
-        return self.mappings[pmid]
-
-    def get_missing(self, want: List[str]) -> List[str]:
-        have = self.mappings.keys()
-        return sorted(list(want - have))
-
-    def __del__(self) -> None:
-        if not self._new_updates:
-            return
-        logging.debug("Updating PubMed cache file with %d new entries: %s",
-                      len(self._new_updates), self.cache_file)
-        with open(self.cache_file, "w", encoding="utf_8") as handle:
-            json.dump({key: val.to_json() for key, val in self.mappings.items()}, handle)
+    return MibigAnnotations(record.id, area, data, cache_file, pubmed_cache_file, doi_cache_file)

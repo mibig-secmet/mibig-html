@@ -173,6 +173,7 @@ class ReferenceCollection:
 
     __slots__ = (
         'client',
+        'doi_cache',
         'pubmed_cache',
         'references',
     )
@@ -182,6 +183,7 @@ class ReferenceCollection:
         self.references = {}
         self.pubmed_cache = pubmed_cache
         pmids = []
+        dois = []
 
         for publication in publications:
             if publication.category == "pubmed":
@@ -192,6 +194,7 @@ class ReferenceCollection:
             elif publication.category == "patent":
                 reference = "https://patents.google.com/patent/{}".format(publication.content)
             elif publication.category == "doi":
+                dois.append(publication.content)
                 reference = "https://dx.doi.org/{}".format(publication.content)
             elif publication.category == "url":
                 reference = publication.content
