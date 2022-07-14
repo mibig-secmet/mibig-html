@@ -17,7 +17,7 @@ from typing import List
 import antismash
 from antismash.common.subprocessing import execute
 from mibig.converters.read.top import Everything
-from mibig_taxa import TaxonCache
+from mibig_taxa import TaxonCache  # pylint:disable=no-name-in-module
 
 import mibig_html
 from mibig_html import annotations
