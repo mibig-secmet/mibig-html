@@ -20,6 +20,7 @@ install_requires = [
     'python-mibig',
     'numpy',
     'mibig-taxa',
+    'requests',
 ]
 
 tests_require = [
@@ -27,6 +28,7 @@ tests_require = [
     'coverage',
     'pylint == 2.10.2',
     'mypy == 0.910',  # for consistent type checking
+    'types-requests',
 ]
 
 

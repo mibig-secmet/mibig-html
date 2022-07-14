@@ -17,7 +17,7 @@ from mibig.converters.read.cluster import Publication
 from mibig_html.common.html_renderer import FileTemplate
 from mibig_html.common.layers import OptionsLayer
 
-from .mibig import MibigAnnotations, PubmedCache
+from .mibig import MibigAnnotations, PubmedCache, DoiCache
 
 
 def will_handle(_products: List[str], _categories: Set[str]) -> bool:
@@ -49,7 +49,7 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
 
     html = HTMLSections("mibig-general")
     taxonomy_text = f"{tax.superkingdom} > {tax.kingdom} > {tax.phylum} > {tax_class} > {tax.order} > {tax.family} > {tax.name}"
-    publications_links = ReferenceCollection(data.cluster.publications, results.pubmed_cache)
+    publications_links = ReferenceCollection(data.cluster.publications, results.pubmed_cache, results.doi_cache)
 
     general = render_template("general.html", data=results.data, taxonomy_text=taxonomy_text,
                               publications_links=publications_links.get_links())
@@ -178,10 +178,12 @@ class ReferenceCollection:
         'references',
     )
 
-    def __init__(self, publications: List[Publication], pubmed_cache: PubmedCache) -> None:
+    def __init__(self, publications: List[Publication], pubmed_cache: PubmedCache,
+                 doi_cache: DoiCache) -> None:
         self.client: Client = None
         self.references = {}
         self.pubmed_cache = pubmed_cache
+        self.doi_cache = doi_cache
         pmids = []
         dois = []
 
@@ -203,6 +205,7 @@ class ReferenceCollection:
                 publication.category, reference, publication.content)
 
         self._resolve_pmids(pmids)
+        self._resolve_dois(dois)
 
     def get_links(self) -> List[ReferenceLink]:
         return list(self.references.values())
@@ -225,3 +228,9 @@ class ReferenceCollection:
             entry = self.pubmed_cache.get(pmid)
             self.references[pmid].title = entry.title
             self.references[pmid].info = entry.info
+
+    def _resolve_dois(self, dois: List[str]) -> None:
+        for doi in dois:
+            entry = self.doi_cache.get(doi)
+            self.references[doi].title = entry.title
+            self.references[doi].info = entry.info

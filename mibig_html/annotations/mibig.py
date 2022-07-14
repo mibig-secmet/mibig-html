@@ -21,7 +21,7 @@ from mibig_taxa import TaxonCache  # pylint: disable=no-name-in-module
 
 from mibig_html.common.secmet import Record
 
-from .references import PubmedCache
+from .references import DoiCache, PubmedCache
 
 
 class MibigAnnotations(DetectionResults):
@@ -37,6 +37,7 @@ class MibigAnnotations(DetectionResults):
         self.taxonomy = cache.get(int(data.cluster.ncbi_tax_id))
 
         self.pubmed_cache = PubmedCache(pubmed_cache_file)
+        self.doi_cache = DoiCache(doi_cache_file)
 
     def get_predicted_subregions(self) -> List[SubRegion]:
         return [self.area]
