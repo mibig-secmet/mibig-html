@@ -18,7 +18,6 @@ install_requires = [
     'antismash @ git+https://github.com/antismash/antismash@6-1-1',
     'eutils',
     'python-mibig',
-    'numpy',
     'mibig-taxa',
     'requests',
 ]
