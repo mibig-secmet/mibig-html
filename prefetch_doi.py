@@ -35,6 +35,7 @@ def fetch_all(cache_file: str, files: List[str]) -> None:
             else:
                 try:
                     doi_cache.get(doi)
+                    doi_cache.save()
                 except ValueError as err:
                     print("failed to import DOIs from", filename, err)
                     raise
