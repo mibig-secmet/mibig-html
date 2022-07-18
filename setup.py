@@ -19,6 +19,7 @@ install_requires = [
     'eutils',
     'python-mibig',
     'numpy',
+    'mibig-taxa',
 ]
 
 tests_require = [
