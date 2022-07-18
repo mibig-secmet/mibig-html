@@ -33,7 +33,11 @@ def fetch_all(cache_file: str, files: List[str]) -> None:
             if doi in SPECIAL:
                 doi_cache.add_entry(DoiEntry.from_json(SPECIAL[doi]))
             else:
-                doi_cache.get(doi)
+                try:
+                    doi_cache.get(doi)
+                except ValueError as err:
+                    print("failed to import DOIs from", filename, err)
+                    raise
     doi_cache.save()
 
 
