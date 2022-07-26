@@ -20,7 +20,10 @@ from antismash.custom_typing import AntismashModule
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
-from mibig_html.html.generator import generate_webpage
+from mibig.converters.read.top import Everything
+
+from mibig_html.html.generator import generate_webpage, generate_retired_page
+
 
 NAME = "mibig_html"
 SHORT_DESCRIPTION = "HTML output for mibig-mode"
@@ -82,6 +85,23 @@ def write(records: List[Record], results: List[Dict[str, ModuleResults]],
     assert len(records) == 1
     assert len(results) == 1
     generate_webpage(records[0], results[0], options, all_modules)
+
+
+def write_retired(data: Everything, options: ConfigType) -> None:
+    """ Write the webpage for retired entries. Writes to options.output_dir
+
+        Arguments:
+            options: antisamsh config object
+
+        Returns:
+            None
+    """
+    output_dir = options.output_dir
+
+    copy_template_dir('css', output_dir, pattern="mibig.css")
+    copy_template_dir('js', output_dir)
+    copy_template_dir('images', output_dir)
+    generate_retired_page(data, options)
 
 
 def copy_template_dir(template: str, output_dir: str, pattern: Optional[str] = None) -> None:

@@ -27,6 +27,8 @@ from antismash.outputs.html.generator import (
     VISUALISERS,
 )
 
+from mibig.converters.read.top import Everything
+
 from mibig_html import annotations
 from mibig_html.common.layers import OptionsLayer
 
@@ -191,6 +193,19 @@ def generate_webpage(record: Record, result: Dict[str, ModuleResults],
                           svg_tooltip=svg_tooltip,
                           record=record_layer, region=region, cluster=mibig_results.data.cluster,
                           annotation_filename=annotation_filename, mibig_id=mibig_id)
+    with open(os.path.join(options.output_dir, 'index.html'), 'w', encoding="utf_8") as result_file:
+        result_file.write(aux)
+
+
+def generate_retired_page(data: Everything, options: ConfigType) -> None:
+    template = FileTemplate(path.get_full_path(__file__, "templates", "retired.html"))
+
+    options_layer = OptionsLayer(options, [])
+    mibig_id = data.cluster.mibig_accession
+
+    aux = template.render(options=options_layer,
+                          reasons=data.cluster.retirement_reasons, see_also=data.cluster.see_also,
+                          page_title=mibig_id, mibig_id=mibig_id)
     with open(os.path.join(options.output_dir, 'index.html'), 'w', encoding="utf_8") as result_file:
         result_file.write(aux)
 

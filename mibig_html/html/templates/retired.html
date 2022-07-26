@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{page_title}}</title>
+  <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico">
+  <link rel="stylesheet" type="text/css" href="css/mibig.css">
+</head>
+{% set multi_record = False %}
+<body>
+  <div id="header">
+    {% include 'header_retired.html' %}
+  </div>
+
+  <div class="no-results">
+    <h2>{{ mibig_id }} has been retired.</h2>
+    <h3>Reasons for retirement:</h3>
+    <ul>
+    {% for reason in reasons %}
+      <li>{{ reason }}</li>
+    {% endfor %}
+    </ul>
+    {% if see_also %}
+    <h3>See also:</h3>
+    <ul>
+    {% for see in see_also %}
+    <li><a href="{{options.base_url}}repository/{{ see }}/">{{ see }}</a></li>
+    {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+{% include 'footer.html' %}
+
+  <script src="js/jquery.js"></script>
+  <script src="js/antismash.js"></script>
+  <script>
+    $(document).ready(function() {
+        window.location.href = "#r1c1";
+        window.scrollTo(0, 0);
+        viewer["start"](all_regions, details_data, resultsData, recordData);
+        document.removeEventListener("keyup", null);
+    })
+  </script>
+
+{% include 'svg_references.html' %}
+</body>
+</html>

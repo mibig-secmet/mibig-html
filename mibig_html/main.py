@@ -315,6 +315,17 @@ def _run_mibig(sequence_file: Optional[str], options: ConfigType) -> int:
     start = loci.start - 1 if loci.start else 0
     end = loci.end or 0
 
+    if data.cluster.status == "retired":
+
+        html.write_retired(data, options)
+
+        running_time = datetime.now() - start_time
+        logging.debug("MIBiG HTML generation finished at %s; runtime: %s",
+                      datetime.now().strftime("%Y-%m-%d %H:%M:%S"), str(running_time))
+
+        logging.info("MIBiG status: SUCCESS")
+        return 0
+
     if sequence_file:
         records = parse_input_sequence(sequence_file, options.taxon, start, end)
         results = serialiser.AntismashResults(sequence_file.rsplit(os.sep, 1)[-1],
