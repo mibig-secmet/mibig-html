@@ -21,5 +21,8 @@ pip-delete-this-directory.txt
 pip-egg-info/*
 tax_cache.json
 output/*
+*.log
+*_cache.json
+*.sh
 
 # generated during make test
