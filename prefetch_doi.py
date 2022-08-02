@@ -26,6 +26,8 @@ def fetch_all(cache_file: str, files: List[str]) -> None:
     for filename in files:
         with open(filename) as handle:
             data = json.load(handle)
+        if "publications" not in data["cluster"]:
+            continue
         for ref in data["cluster"]["publications"]:
             if not ref.startswith("doi:"):
                 continue
