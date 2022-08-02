@@ -110,7 +110,6 @@ class Record(ASRecord):
         results = self._alternative_names.get(name, set())
         if not results:
             try:
-                self.get_cds_by_name("napT1")
                 if self.get_cds_by_name(name):
                     return name
             except KeyError as err:
