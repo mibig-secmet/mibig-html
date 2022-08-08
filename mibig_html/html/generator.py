@@ -93,7 +93,7 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
             cds_annotations = mibig_results.data.cluster.genes.annotations
         except AttributeError:
             cds_annotations = []
-        update_cds_description(record, json_record, cds_annotations)
+        update_cds_description(record, json_record, cds_annotations, mibig_results)
 
         json_record['seq_id'] = "".join(char for char in json_record['seq_id'] if char in string.printable)
         for region, json_region in zip(record.get_regions(), json_record['regions']):
@@ -211,7 +211,9 @@ def generate_retired_page(data: Everything, options: ConfigType) -> None:
 
 
 def update_cds_description(record: Record, js_record: Dict[str, Any],
-                           cds_annotations: List[GeneAnnotation]) -> None:
+                           cds_annotations: List[GeneAnnotation], results: annotations.MibigAnnotations) -> None:
+    original_accession = results.data.cluster.loci.accession
+
     id_to_annotations = {}
     for annotation in cds_annotations:
         if annotation.id:
@@ -233,3 +235,4 @@ def update_cds_description(record: Record, js_record: Dict[str, Any],
                     break
             rendered = template.render(annotation=annotation)
             js_cds["description"] = re.sub(r"(\(total: (.+) nt\)<br>)", r"\1{}".format(rendered), str(js_cds["description"]))
+            js_cds["description"] = re.sub(record.id, original_accession, js_cds["description"])
