@@ -85,6 +85,7 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
         annot_idx = -1
         for i, annot in enumerate(annots):
             annot_names = {annot.name, annot.id}
+            annot_names.discard(None)
             feature_names = {cds_feature.locus_tag, cds_feature.protein_id, cds_feature.gene}
             if feature_names.intersection(annot_names):
                 annot_idx = i
