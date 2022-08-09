@@ -235,4 +235,7 @@ def update_cds_description(record: Record, js_record: Dict[str, Any],
                     break
             rendered = template.render(annotation=annotation)
             js_cds["description"] = re.sub(r"(\(total: (.+) nt\)<br>)", r"\1{}".format(rendered), str(js_cds["description"]))
-            js_cds["description"] = re.sub(record.id, original_accession, js_cds["description"])
+            if original_accession.startswith("MIBIG"):
+                js_cds["description"] = re.sub(r"<a[^>]+>View genomic context</a>", "", js_cds["description"])
+            else:
+                js_cds["description"] = re.sub(record.id, original_accession, js_cds["description"])
