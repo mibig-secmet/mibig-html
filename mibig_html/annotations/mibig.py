@@ -150,7 +150,7 @@ def mibig_loader(annotations_file: str, cache_file: str, pubmed_cache_file: str,
                     cds_feature.product = annot.product
 
     existing = set()
-    for cds in record.get_cds_features():
+    for cds in record.get_cds_features_within_location(area.location, with_overlapping=False):
         for name in [cds.locus_tag, cds.protein_id, cds.gene]:
             if name is not None:
                 existing.add(name)
