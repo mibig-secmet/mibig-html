@@ -274,7 +274,7 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria",
         if end == 0:
             end = len(record.seq)
         location = FeatureLocation(start, end)
-        logging.critical(f"removing all CDS features outside area: {location}")
+        logging.info(f"Removing all CDS features outside area: {location}")
         features = []
         for feature in record.features:
             if feature.type != "CDS":  # keep all non-CDS features
