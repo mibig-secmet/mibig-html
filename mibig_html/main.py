@@ -178,7 +178,7 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
         assert os.path.exists(zipfile)
 
     logging.debug("Saving mibig annotation file")
-    annotation_filename = "{}.json".format(_get_mibig_acc(options))
+    annotation_filename = "annotations.json"
     shutil.copy(options.mibig_json, os.path.join(options.output_dir, annotation_filename))
 
 
@@ -192,7 +192,7 @@ def mibig_rename_records(records: List[Record], options: ConfigType) -> None:
     mibig_acc = _get_mibig_acc(options)
 
     for record in records:
-        record.id = "{}.1".format(mibig_acc)
+        record.id = "{}".format(mibig_acc)
         record.name = mibig_acc
         record.annotations['accessions'].insert(0, mibig_acc)
 

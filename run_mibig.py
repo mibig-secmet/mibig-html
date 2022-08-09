@@ -46,7 +46,7 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
     gbk_acc = data.cluster.loci.accession
     gbk_path = os.path.join(gbk_folder, "{}.gbk".format(gbk_acc))
     output_path = os.path.join(output_folder, mibig_acc)
-    reusable_json_path = os.path.join(output_path, "{}.1.json".format(mibig_acc))
+    reusable_json_path = os.path.join(output_path, "{}.json".format(mibig_acc))
 
     # load/populate cache in advance, because it is needed to fetch taxonomy information
     cache = TaxonCache(cache_path)
@@ -79,7 +79,7 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
         "--mibig-pubmed-json", pubmed_cache,
         "--mibig-doi-json", doi_cache,
         "--output-dir", output_path,
-        "--output-basename", f"{mibig_acc}.1",
+        "--output-basename", f"{mibig_acc}",
     ]
     all_modules = mibig_html.get_all_modules()
     assert mibig_html.annotations in all_modules
@@ -118,11 +118,11 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
         return 0
 
     print("Generating antiSMASH output for {}".format(mibig_acc))
-    with open(os.path.join(output_path, "{}.1.json".format(mibig_acc)), "r") as result_json_txt:
+    with open(os.path.join(output_path, "{}.json".format(mibig_acc)), "r") as result_json_txt:
         result_json = json.load(result_json_txt)
         assert len(result_json["records"]
                    ) == 1 and annotations.__name__ in result_json["records"][0]["modules"]
-    prefix = f"{mibig_acc}.1"
+    prefix = mibig_acc
     region_gbk_path = os.path.join(output_path, f"{prefix}.gbk")
     output_path = os.path.join(output_path, "generated")
     reusable_as5_json_path = os.path.join(output_path, f"{prefix}.json")
@@ -136,7 +136,7 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
             },
             "records": [
                 {
-                    "name": f"{mibig_acc}.1",
+                    "name": mibig_acc,
                     "subregions": [
                         {
                             "start": 0,
