@@ -22,7 +22,7 @@
                                 <ul style="padding:0; margin:0; list-style: none;">
                                     {% for key in ["locus_tag", "protein_id", "gene"] %}
                                         {% if gene.get(key) %}
-                                            <li>{{clickable_gene(gene[key], record, force_current=True)}}</li>
+                                            <li>{{clickable_gene(gene[key], record, force_current=True, real_name=gene["real_name"])}}</li>
                                         {% endif %}
                                     {% endfor %}
                                 </ul>

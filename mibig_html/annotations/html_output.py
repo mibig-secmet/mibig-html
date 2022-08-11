@@ -62,6 +62,7 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
     annots = data.cluster.genes.annotations if data.cluster.genes else []
     for cds_feature in region_layer.cds_children:
         gene = {
+            "real_name": cds_feature.get_name(),
             "locus_tag": cds_feature.locus_tag,
             "protein_id": cds_feature.protein_id,
             "gene": cds_feature.gene,
