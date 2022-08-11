@@ -53,6 +53,10 @@ class Record(ASRecord):
         """
         return tuple(self._altered_from_input)
 
+    def get_renames(self) -> Set[str]:
+        """ Returns a set of original gene names that were altered """
+        return set(self._deduplicated_cds_names)
+
     def add_cds_feature(self, cds_feature: CDSFeature, auto_deduplicate: bool = True) -> None:
         def add_alternative_names() -> None:
             real_name = cds_feature.get_name()
