@@ -16,6 +16,7 @@ from antismash.common.secmet import Record
 
 _TOOLTIP_COUNTER = 0
 
+
 def help_tooltip(text: str, name: str, inline: bool = False) -> Markup:
     """ Constructs a help icon with tooltip, each will have a unique ID generated
         based on the given name.
@@ -36,8 +37,23 @@ def help_tooltip(text: str, name: str, inline: bool = False) -> Markup:
                    '</div>').format(unique_id, text, "-inline" if inline else ""))
 
 
-def clickable_gene(name: str, record: Record, force_current: bool = False) -> Markup:
-    real_name = record.get_real_cds_name(name)
+def clickable_gene(name: str, record: Record, force_current: bool = False, real_name: str = None) -> Markup:
+    """ A template for HTML that will highlight the relevant CDS in the overview,
+        using the "gene" name if possible.
+
+        Arguments:
+            name: any identifier for the CDS
+            record: the containing Record
+            force_current: if True, uses the given name instead of the gene name in display
+            real_name: the unique name for the CDS if known, otherwise it will be looked up
+
+        Returns:
+            A Markup instance with the constructed HTML
+    """
+
+    if not real_name:
+        real_name = record.get_real_cds_name(name)
+    assert real_name is not None
     if force_current:
         gene_name = name
     else:
@@ -48,6 +64,18 @@ def clickable_gene(name: str, record: Record, force_current: bool = False) -> Ma
 
 def clickable_gene_list(names: List[str], record: Record,
                         force_current: bool = False, separator: str = " ") -> Markup:
+    """ A template for HTML that will highlight relevant CDS features in the overview,
+        using the "gene" name if possible.
+
+        Arguments:
+            names: any identifier for the CDS features
+            record: the containing Record
+            force_current: if True, uses the given name instead of the gene name in display
+            separator: the separator to use in the output
+
+        Returns:
+            A Markup instance with the constructed HTML
+    """
     return Markup(separator.join(clickable_gene(name, record, force_current=force_current) for name in names))
 
 
