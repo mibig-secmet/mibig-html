@@ -185,4 +185,9 @@ def mibig_loader(annotations_file: str, cache_file: str, pubmed_cache_file: str,
         raise ValueError(
             f"{data.cluster.mibig_accession} refers to missing genes: {', '.join(sorted(missing))}")
 
+    ambiguous = referenced.intersection(record.get_renames())
+    if ambiguous:
+        raise ValueError(
+            f"{data.cluster.mibig_accession} uses reference name(s) referring to multiple genes : {', '.join(sorted(ambiguous))}")
+
     return MibigAnnotations(record.id, area, data, cache_file, pubmed_cache_file, doi_cache_file)
