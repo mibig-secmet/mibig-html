@@ -175,7 +175,7 @@ def generate_webpage(record: Record, result: Dict[str, ModuleResults],
     record_layer = RecordLayer(record, None, options_layer)
 
     mibig_id = os.path.splitext(os.path.basename(options.mibig_json))[0]
-    annotation_filename = "{}.json".format(mibig_id)
+    annotation_filename = "annotations.json"
 
     sections = generate_html_sections(record_layer, result, options, all_modules, categories)
 
