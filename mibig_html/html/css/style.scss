@@ -1376,8 +1376,8 @@ ul.dropdown-options {
 
     .help-tooltip {
         @extend .tooltip;
-        position:fixed;
-        left: 25vw;
+        position:relative;
+        left: 1vw;
         top: inherit;
         margin-top: 2em;
         text-align: center;
