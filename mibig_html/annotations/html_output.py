@@ -107,23 +107,8 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
             if annot.product:
                 gene["product"] = annot.product
         genes.append(gene)
-    for annot in annots:
-        gene = {
-            "locus_tag": annot.id,
-            "protein_id": "None",
-            "gene": annot.name,
-            "product": annot.product or ""
-        }
-        gene["functions"] = []
-        for function in annot.functions:
-            function_text = function.category
-            if annot.tailoring:
-                function_text += " ({}) ".format(", ".join(annot.tailoring))
-            else:
-                function_text += " "
-            gene["functions"].append(function_text)
-            gene["evidences"] = sorted(set(function.evidence))
-        genes.append(gene)
+    # everything should've been popped
+    assert not annots
     html.add_detail_section("Genes", render_template("genes.html", genes=genes, record=record_layer),
                             class_name="mibig-genes")
 
