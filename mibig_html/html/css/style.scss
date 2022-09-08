@@ -1384,3 +1384,25 @@ ul.dropdown-options {
         font-size: 90%;
     }
 }
+
+.simple-tooltip {
+    position: relative;
+    display: inline-block;
+
+    .simple-tooltip-text {
+        @extend .tooltip;
+        display: block;
+        visibility: hidden;
+        text-align: center;
+        width: max-content;
+        height: max-content;
+        top: unset;
+        bottom: 110%;
+        right: -100%;
+    }
+    &:hover {
+        .simple-tooltip-text {
+            visibility: visible;
+        }
+    }
+}

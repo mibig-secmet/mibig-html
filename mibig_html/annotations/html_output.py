@@ -60,6 +60,7 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
 
     genes = []
     annots = data.cluster.genes.annotations if data.cluster.genes else []
+    genes_have_comments = False
     for cds_feature in region_layer.cds_children:
         gene = {
             "real_name": cds_feature.get_name(),
@@ -106,10 +107,14 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
                 gene["functions"].append(function_text)
             if annot.product:
                 gene["product"] = annot.product
+            if annot.comments:
+                gene["comment"] = annot.comments
+                genes_have_comments = True
         genes.append(gene)
     # everything should've been popped
     assert not annots
-    html.add_detail_section("Genes", render_template("genes.html", genes=genes, record=record_layer),
+
+    html.add_detail_section("Genes", render_template("genes.html", genes=genes, genes_have_comments=genes_have_comments, record=record_layer),
                             class_name="mibig-genes")
 
     if data.cluster.polyketide:

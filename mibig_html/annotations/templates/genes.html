@@ -12,6 +12,9 @@
                         <th>Product</th>
                         <th>Functions</th>
                         <th>Evidence</th>
+                        {% if genes_have_comments -%}
+                        <th>Comment</th>
+                        {%- endif %}
                         <th>Extra</th>
                     </tr>
                 </thead>
@@ -43,6 +46,16 @@
                               {% endfor %}
                               {% endif %}
                             </td>
+                            {% if genes_have_comments -%}
+                                <td>
+                                  {% if "comment" in gene -%}
+                                    <div class="simple-tooltip">
+                                      <img class="gene-comment" src="images/file-lines-solid.svg" style="height:1.5em">
+                                      <span class="simple-tooltip-text">{{gene["comment"]}}</span>
+                                    </div>
+                                  {%- endif %}
+                                </td>
+                            {%- endif %}
                             <td>
                                 <div class="focus-clipboard">
                                     {% if "aa_seq" in gene %}
