@@ -35,7 +35,7 @@ def write_log(text: str, file_path: str) -> None:
 
 def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
           log_file_path: str, mibig_version: str, mibig_only: bool, pubmed_cache: str,
-          doi_cache: str) -> int:
+          doi_cache: str, kcb_path: str) -> int:
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -81,6 +81,9 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
         "--output-dir", output_path,
         "--output-basename", f"{mibig_acc}",
     ]
+    if kcb_path:
+        antismash.modules.clusterblast.core._SHIPPED_DATA_DIR = kcb_path
+        antismash.modules.clusterblast.known._SHIPPED_DATA_DIR = kcb_path
     all_modules = mibig_html.get_all_modules()
     assert mibig_html.annotations in all_modules
     parser = antismash.config.args.build_parser(from_config_file=True, modules=all_modules)
@@ -206,9 +209,11 @@ if __name__ == "__main__":
                         help="The DOI cache file")
     parser.add_argument("-m", "--mibig-only", action="store_true",
                         help="Only run the MIBiG generation, skip full antiSMASH run")
+    parser.add_argument("--kcb", type=str, default="",
+                        help="Specify the path to a custom KnownClusterBlast database")
     args = parser.parse_args()
     if _main(args.json, args.genbanks, args.cache, args.output, args.logfile,
-             args.mibig_version, args.mibig_only, args.pubmed_cache, args.doi_cache):
+             args.mibig_version, args.mibig_only, args.pubmed_cache, args.doi_cache, args.kcb):
         print("Errors were encountered, see log file for details")
         sys.exit(1)
     sys.exit(0)
