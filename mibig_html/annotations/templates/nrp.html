@@ -131,6 +131,9 @@
                                     {% if module.non_canonical.skipped %}
                                     <li>Skipped</li>
                                     {% endif %}
+                                    {% if not (module.non_canonical.skipped or module.non_canonical.iterated or module.non_canonical.non_elongating) -%}
+                                        <li>Other</li>
+                                    {%- endif %}
                                 </ul>
                                 Evidence for non-canonical activity: <br />
                                 <ul style="margin: 0;">
