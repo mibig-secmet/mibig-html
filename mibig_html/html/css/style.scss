@@ -1226,26 +1226,6 @@ ul.dropdown-options {
     }
 }
 
-.help-container-inline {
-    @extend .help-container;
-    float: none;
-
-    .help-icon {
-        float: none;
-        background-color: $antismash-main;
-    }
-
-    .help-tooltip {
-        @extend .tooltip;
-        position:fixed;
-        left: 25vw;
-        top: inherit;
-        margin-top: 2em;
-        text-align: center;
-        font-size: 90%;
-    }
-}
-
 .focus-panel-content {
     margin-left: 2em;
     margin-right: 2em;
