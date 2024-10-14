@@ -42,11 +42,15 @@
                             <td>
                                 <ul style="padding:0; margin:0; list-style: none;">
                                     <li>
+                                    {%- if gene["functions"] -%}
                                     {%- for function, evidence in gene["functions"].items() -%}
+                                      {%- if evidence -%}
                                       {%- for method, links in evidence.items() %}
                                         <span class="mibig-gf-evidence-{{ method[0] }}">{{ method }}</span> {{ links }}
                                       {%- endfor -%}
+                                      {%- endif -%}
                                     {%- endfor -%}
+                                    {%- endif -%}
                                     </li>
                                 </ul>
                             </td>
