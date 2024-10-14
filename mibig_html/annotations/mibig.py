@@ -163,7 +163,10 @@ def mibig_loader(annotations_file: str, cache_file: str, pubmed_cache_file: str,
     referenced = set()
     if entry.genes and entry.genes.annotations:
         for gene in entry.genes.annotations:
-            referenced.add(str(gene.id))
+            gene_id = str(gene.id)
+            referenced.add(gene_id)
+            if gene_id in existing:
+                existing.add(str(gene.name))
     referenced.update([str(r) for r in entry.biosynthesis.genes_referenced])
 
     missing = referenced.difference(existing)
