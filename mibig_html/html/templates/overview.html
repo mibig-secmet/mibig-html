@@ -20,13 +20,17 @@
 
   <script src="js/jquery.js"></script>
   <script src="js/antismash.js"></script>
+  <script src="js/mibig.js"></script>
   <script src="regions.js"></script>
   <script>
     $(document).ready(function() {
         window.location.href = "#r1c1";
         window.scrollTo(0, 0);
-        viewer["start"](all_regions, details_data, resultsData, recordData);
-        document.removeEventListener("keyup", null);
+        options = {
+          disableRegionNav: true,
+        };
+        viewer["start"](all_regions, details_data, resultsData, recordData, options);
+        reveal_contributors();
         const compound_links = document.getElementsByClassName("compound-link");
         for(let i=0; i < compound_links.length; i++) {
             const link = compound_links[i];

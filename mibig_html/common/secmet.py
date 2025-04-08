@@ -4,6 +4,7 @@
 from collections import defaultdict
 from typing import Any, Dict, List, Set, Tuple, Type, TypeVar, Union
 
+from antismash.common.secmet.locations import location_from_biopython
 from antismash.common.secmet.record import (
     CDSFeature,
     location_bridges_origin,
@@ -140,7 +141,8 @@ class Record(ASRecord):
             self.add_alteration(f"the translation of {name} was too long and was regenerated")
 
     @classmethod
-    def from_biopython(cls: Type[T], seq_record: SeqRecord, taxon: str) -> T:
+    def from_biopython(cls: Type[T], seq_record: SeqRecord, taxon: str,
+                       discard_antismash_features: bool = True, **kwargs) -> T:
         # handle some entry reference records being mislabeled as RNA (e.g. BGCs 488, 720, 1166)
         molecule_type = seq_record.annotations.get("molecule_type", "DNA")
         if not molecule_type.upper().endswith("DNA"):
@@ -149,9 +151,10 @@ class Record(ASRecord):
         can_be_circular = taxon == "bacteria"
         names = set()
         for feature in seq_record.features:
-            if can_be_circular and location_bridges_origin(feature.location, allow_reversing=False):
+            location = location_from_biopython(feature.location)
+            if can_be_circular and location_bridges_origin(location, allow_reversing=False):
                 names.add(_get_biopython_cds_name(feature))
-        record = super().from_biopython(seq_record, taxon)
+        record = super().from_biopython(seq_record, taxon, discard_antismash_features, **kwargs)
         for name in sorted(names):
             record.add_alteration(f"{name} crossed the origin and was split into two features")
         assert isinstance(record, cls)

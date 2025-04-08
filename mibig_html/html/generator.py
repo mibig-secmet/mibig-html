@@ -13,7 +13,7 @@ from mibig.converters.shared.mibig.genes import Annotation
 
 from antismash.common import html_renderer, path
 from antismash.common.html_renderer import FileTemplate, HTMLSections
-from antismash.common.json import JSONOrf
+from antismash.common.json import JSONCompatible
 from antismash.common.layers import RecordLayer, RegionLayer
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
@@ -59,8 +59,7 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
                     options: ConfigType, all_modules: List[AntismashModule],
                     categories: Set[str]) -> Tuple[
                         List[Dict[str, Any]],
-                        List[Dict[str, Union[str, List[JSONOrf]]]],
-                        Dict[str, Dict[str, Dict[str, Any]]]
+                        dict[str, dict[str, JSONCompatible]]
                     ]:
     """ Builds JSON versions of records and domains for use in drawing SVGs with
         javascript.
@@ -78,7 +77,6 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
     """
     js_records = js.convert_records(records, results, options)
 
-    js_domains: List[Dict[str, Union[str, List[JSONOrf]]]] = []
     js_results = {}
     assert len(records) == 1
     assert len(records[0].get_regions()) == 1
@@ -101,10 +99,6 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
                 # if there's no results for the module, don't let it try
                 if handler.__name__ not in results[i]:
                     continue
-                if "generate_js_domains" in dir(handler):
-                    domains_by_region = handler.generate_js_domains(region, record)
-                    if domains_by_region:
-                        js_domains.append(domains_by_region)
                 if hasattr(handler, "generate_javascript_data"):
                     data = handler.generate_javascript_data(record, region, results[i][handler.__name__])
                     region_results[handler.__name__] = data
@@ -119,7 +113,7 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
             if region_results:
                 js_results[RegionLayer.build_anchor_id(region)] = region_results
 
-    return js_records, js_domains, js_results
+    return js_records, js_results
 
 
 def generate_html_sections(record: RecordLayer, results: Dict[str, ModuleResults],
@@ -163,8 +157,8 @@ def generate_webpage(record: Record, result: Dict[str, ModuleResults],
     all_modules.pop(all_modules.index(annotations))
     all_modules.insert(0, cast(AntismashModule, annotations))
 
-    json_records, js_domains, js_results = build_json_data([record], [result], options, all_modules, categories)
-    write_regions_js(json_records, options.output_dir, js_domains, js_results)
+    json_records, js_results = build_json_data([record], [result], options, all_modules, categories)
+    write_regions_js(json_records, options.output_dir, js_results)
 
     template = FileTemplate(path.get_full_path(__file__, "templates", "overview.html"))
 
@@ -184,7 +178,7 @@ def generate_webpage(record: Record, result: Dict[str, ModuleResults],
                    )
     region = record_layer.regions[0]
     aux = template.render(records=[record_layer], options=options_layer,
-                          version=options.version, extra_data=js_domains,
+                          version=options.version,
                           regions_written=1, sections={record.id: {1: sections}},
                           config=options, page_title=mibig_id,
                           svg_tooltip=svg_tooltip,

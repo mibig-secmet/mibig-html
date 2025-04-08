@@ -38,8 +38,6 @@ from antismash.main import (
     ModuleResults,
     run_module,
     serialiser,
-    SeqIO,
-    svg,
 )
 from mibig.converters.shared.common import StatusLevel
 from mibig.converters.shared.mibig import MibigEntry
@@ -147,9 +145,6 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
 
     logging.debug("Creating results page")
     html.write(results.records, module_results_per_record, options, get_all_modules())
-
-    logging.debug("Creating results SVGs")
-    svg.write(options, module_results_per_record)
 
     # convert records to biopython
     assert len(results.records) == 1
@@ -288,7 +283,7 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria",
     strip_record(record)
 
     logging.debug("Converting records from biopython to secmet")
-    secmet_record = Record.from_biopython(record, taxon)
+    secmet_record = Record.from_biopython(record, taxon, discard_antismash_features=True)
     # if parsable by secmet, it has a better context on what to strip, so run
     # the secmet stripping to ensure there's no surprises
     secmet_record.strip_antismash_annotations()
