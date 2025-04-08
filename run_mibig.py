@@ -97,7 +97,6 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
             if os.path.exists(output_path):
                 rmtree(output_path)
             raise
-            return 1
     write_log(f"Successfully {operation} MIBiG page for {mibig_acc}", log_file_path)
     if mibig_only:
         return 0
