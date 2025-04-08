@@ -573,6 +573,10 @@ table.region-table {
     font-size: 85%;
 }
 
+.svgene-locustag-background {
+    fill: white;
+}
+
 .cluster-core {
     stroke: black;
     stroke-width: 1px;
@@ -589,9 +593,10 @@ table.region-table {
     stroke-width: 0;
 }
 
-.svgene-selected-orf {
+.svgene-selected-orf-border {
     stroke: #000;
     stroke-width: 1px;
+    fill: none;
 }
 
 .legend-items, .zoom-buttons {
