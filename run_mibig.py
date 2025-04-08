@@ -17,6 +17,7 @@ from typing import List
 import antismash
 from antismash.common.subprocessing import execute
 from mibig.converters.shared.mibig import MibigEntry
+from mibig.converters.shared.mibig.entry import StatusLevel
 
 import mibig_html
 from mibig_html import annotations
@@ -99,6 +100,9 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
             return 1
     write_log(f"Successfully {operation} MIBiG page for {mibig_acc}", log_file_path)
     if mibig_only:
+        return 0
+
+    if entry.status not in (StatusLevel.ACTIVE, StatusLevel.PENDING):
         return 0
 
     print("Generating antiSMASH output for {}".format(mibig_acc))
