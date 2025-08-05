@@ -26,10 +26,7 @@
     $(document).ready(function() {
         window.location.href = "#r1c1";
         window.scrollTo(0, 0);
-        options = {
-          disableRegionNav: true,
-        };
-        viewer["start"](all_regions, details_data, resultsData, recordData, options);
+        viewer["start"](all_regions, resultsData, recordData);
         reveal_contributors();
         const compound_links = document.getElementsByClassName("compound-link");
         for(let i=0; i < compound_links.length; i++) {
