@@ -11,6 +11,7 @@ from antismash.common.html_renderer import (
     FileTemplate as _FileTemplate,
     Markup,
     switch,
+    cds_selector_span,
 )
 from antismash.common.secmet import Record
 from mibig.converters.shared.common import Citation, Evidence
@@ -68,7 +69,7 @@ def clickable_gene(name: str, record: Record, force_current: bool = False, real_
     else:
         cds = record.get_cds_by_name(real_name)
         gene_name = cds.gene or real_name
-    return Markup(f'<span class="jsdomain-orflabel" data-locus="{real_name}" style="font-size:100%">{gene_name}</span>')
+    return cds_selector_span(real_name, display_name=gene_name)
 
 
 def clickable_gene_list(names: List[str], record: Record,

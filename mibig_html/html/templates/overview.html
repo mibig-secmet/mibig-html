@@ -26,7 +26,17 @@
     $(document).ready(function() {
         window.location.href = "#r1c1";
         window.scrollTo(0, 0);
-        viewer["start"](all_regions, resultsData, recordData);
+        viewer.setData(all_regions, resultsData, recordData);
+        viewer.createRecordOverviews(recordData);
+        viewer.switchToRegion();
+        viewer.createGeneralHandlers();
+        viewer.initialiseDomains();
+        viewer.createModuleHandlers();
+        viewer.drawStructures();
+        viewer.setupDetails(all_regions.order);
+        viewer.initDownloadButtons();
+        viewer.addHelpTooltipHandlers();
+        document.addEventListener("keyup", viewer.tabKeyUpEvent, false);
         reveal_contributors();
         const compound_links = document.getElementsByClassName("compound-link");
         for(let i=0; i < compound_links.length; i++) {
