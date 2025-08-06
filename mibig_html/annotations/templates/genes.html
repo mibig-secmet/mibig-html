@@ -46,7 +46,13 @@
                                     {%- for function, evidence in gene["functions"].items() -%}
                                       {%- if evidence -%}
                                       {%- for method, links in evidence.items() %}
-                                        <span class="mibig-gf-evidence-{{ method[0] }}">{{ method }}</span> {{ links }}
+                                        <span class="mibig-gf-evidence-{{ method[0] }}">
+                                            {%- if method.startswith("MITE") -%}
+                                            <a href="https://bioregistry.io/mite:{{method}}" target="_blank">{{method}}</a>
+                                            {%- else -%}
+                                            {{method}}
+                                            {%- endif %}
+                                        </span> {{ links }}
                                       {%- endfor -%}
                                       {%- endif -%}
                                     {%- endfor -%}

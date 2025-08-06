@@ -93,16 +93,21 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
             annot = annots.pop(annot_idx)
             for function in annot.functions if annot.functions else []:
                 function_text = function.function
-                if annot.tailoring_functions:
-                    function_text += " ({}) ".format(", ".join([f.function for f in annot.tailoring_functions]))
-                else:
-                    function_text += " "
                 references_by_method = {}
                 for evidence in function.evidence:
                     references_by_method.setdefault(evidence.method, []).extend(function.references)
                 links = {}
                 for method, references in references_by_method.items():
                     links[method] = build_short_form_citation_links(references)
+                gene["functions"][function_text] = links
+            for tailoring in annot.tailoring_functions if annot.tailoring_functions else []:
+                if not tailoring.db_reference:
+                    continue
+                ref = tailoring.db_reference.split(":")[-1]
+                function_text = f"{tailoring.function}"
+                links = {}
+                if tailoring.references:
+                    links[ref] = build_short_form_citation_links(tailoring.references)
                 gene["functions"][function_text] = links
             if annot.mutation_phenotype:
                 function_text = "Mutation phenotype: {}".format(annot.mutation_phenotype)
