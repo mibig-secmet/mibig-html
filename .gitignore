@@ -25,5 +25,11 @@ output/*
 *.log
 *_cache.json
 *.sh
+BGC*.json
+*.bz2
+*.lof
 
 # generated during make test
+generated/*
+output*
+repository
