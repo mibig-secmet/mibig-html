@@ -89,18 +89,15 @@ def run_mibig_detection(record: Record, options: ConfigType,
     timings: Dict[str, float] = {}
 
     logging.info("Loading MIBiG annotations")
-    run_module(record, cast(AntismashModule, annotations), options, module_results, timings)
-    results = module_results.get(annotations.__name__)
-    if not results:
-        raise ValueError("failed to load MiBIG annotations")
-    assert isinstance(results, DetectionResults)
-    for protocluster in results.get_predicted_protoclusters():
-        record.add_protocluster(protocluster)
-    for region in results.get_predicted_subregions():
-        record.add_subregion(region)
+    for module in [annotations, hmm_detection]:
+        run_module(record, cast(AntismashModule, module), options, module_results, timings)
+        results = module_results.get(module.__name__)
 
-    # annotate biosynthetic domains
-    run_module(record, cast(AntismashModule, hmm_detection), options, module_results, timings)
+        assert isinstance(results, DetectionResults)
+        for protocluster in results.get_predicted_protoclusters():
+            record.add_protocluster(protocluster)
+        for region in results.get_predicted_subregions():
+            record.add_subregion(region)
 
     record.create_candidate_clusters()
     record.create_regions()
@@ -144,7 +141,8 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
         module_results_per_record.append(record_result)
 
     logging.debug("Creating results page")
-    html.write(results.records, module_results_per_record, options, get_all_modules())
+    modules = [annotations, antismash.modules.clusterblast]
+    html.write(results.records, module_results_per_record, options, modules)
 
     # convert records to biopython
     assert len(results.records) == 1

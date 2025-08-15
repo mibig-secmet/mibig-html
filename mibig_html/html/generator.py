@@ -26,6 +26,7 @@ from antismash.outputs.html.generator import (
     write_regions_js,
     VISUALISERS,
 )
+from antismash.outputs.html.visualisers import gene_table
 
 from mibig_html import annotations
 from mibig_html.common.layers import OptionsLayer
@@ -93,6 +94,7 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
         json_record['seq_id'] = "".join(char for char in json_record['seq_id'] if char in string.printable)
         for region, json_region in zip(record.get_regions(), json_record['regions']):
             json_region["product_categories"] = sorted(categories)
+            json_region["clusters"] = json_region["clusters"][:1]
             handlers = find_plugins_for_cluster(all_modules, json_region)
             region_results = {}
             for handler in handlers:
@@ -123,8 +125,7 @@ def generate_html_sections(record: RecordLayer, results: Dict[str, ModuleResults
 
         Arguments:
             records: a list of RecordLayers to pass through to the modules
-            results: a dictionary mapping record name to
-                        a dictionary mapping each module name to its results object
+            results: a dictionary mapping each module name to its results object
             options: the current antiSMASH config
             modules: modules that may have results for the BGC
             categories: a set of antiSMASH-compatible product categories
@@ -142,6 +143,16 @@ def generate_html_sections(record: RecordLayer, results: Dict[str, ModuleResults
             continue
         if hasattr(module, "will_handle") and module.will_handle([], categories):
             sections.append(module.generate_html(region, results[module.__name__], record, options))
+
+    for aggregator in VISUALISERS:
+        if not hasattr(aggregator, "generate_html"):
+            continue
+        if aggregator.has_enough_results(record.seq_record, region.region_feature, results):
+            section = aggregator.generate_html(region, results, record, options)
+            if aggregator is gene_table:
+                continue
+            else:
+                sections.append(section)
     return sections
 
 
