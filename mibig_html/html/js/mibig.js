@@ -17,16 +17,16 @@ const contributorLookupUrl = "/api/v1/contributors?ids[]=";
 const revealedIcon = '<svg class="icon"><use xlink:href="images/icons.svg#user"></use></svg>';
 
 function reveal_contributors() {
-	/** @type {string[]} ids */
-	const ids = [];
+	/** @type {Set<string>} ids */
+	const ids = new Set();
 	const elements = $("li.contributor");
 	elements.each((_, el) => {
 		const id = $(el).attr("id");
 		if (id) {
-			ids.push(id);
+			ids.add(id);
 		}
 	});
-	fetch(contributorLookupUrl + ids.join("&ids[]="))
+	fetch(contributorLookupUrl + [...ids.keys()].join("&ids[]="))
 		.then((res) => res.json())
 		/** @type {Contributor[]} contributors */
 		.then((contributors) => {
