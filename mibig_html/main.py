@@ -95,6 +95,7 @@ def run_mibig_detection(record: Record, options: ConfigType,
 
         assert isinstance(results, DetectionResults)
         for protocluster in results.get_predicted_protoclusters():
+            protocluster.location = protocluster.core_location
             record.add_protocluster(protocluster)
         for region in results.get_predicted_subregions():
             record.add_subregion(region)
