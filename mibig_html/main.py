@@ -258,7 +258,8 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria",
     logging.info('Parsing input sequence %r', filename)
 
     records = _strict_parse(filename)
-    assert len(records) == 1
+    if len(records) != 1:
+        raise ValueError(f"{filename} has {len(records)} records")
     record = records[0]
 
     if not Record.is_nucleotide_sequence(record.seq):
