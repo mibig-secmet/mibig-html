@@ -24,8 +24,9 @@ from mibig_html import annotations
 from mibig_html.common.secmet import Record
 
 
-def run(commands: List[str]) -> bool:
-    return execute(commands, stdout=sys.stdout, stderr=sys.stderr).successful()
+def run(commands: list[str], environment_overrides: dict[str, str] | None = None) -> bool:
+    return execute(commands, stdout=sys.stdout, stderr=sys.stderr,
+                   environment_overrides=environment_overrides).successful()
 
 
 def write_log(text: str, file_path: str) -> None:
@@ -148,7 +149,8 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
         reuse_as5_success = False
         run_success = False
         if os.path.exists(reusable_as5_json_path):
-            reuse_as5_success = run(command + args + ["--reuse-results", reusable_as5_json_path])
+            reuse_as5_success = run(command + args + ["--reuse-results", reusable_as5_json_path],
+                                    environment_overrides={"UMASK": "022"})
             if not reuse_as5_success:
                 write_log("Failed to reuse antiSMASH page for {}".format(mibig_acc), log_file_path)
                 rmtree(output_path)
@@ -157,7 +159,8 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
                 with open(temp.name, "w") as handle:
                     json.dump(sideload_data, handle)
                 args.extend(["--sideload", temp.name])
-                run_success = run(command + args + [region_gbk_path])
+                run_success = run(command + args + [region_gbk_path],
+                                  environment_overrides={"UMASK": "022"})
         if reuse_as5_success or run_success:
             write_log("Successfully generated antiSMASH page for {}".format(mibig_acc), log_file_path)
             # finally, ensure the freshly generated genbank is loadable
